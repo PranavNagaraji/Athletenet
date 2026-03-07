@@ -26,6 +26,19 @@ const competitionSchema = new mongoose.Schema({
         }
     }],
 
+    matches: [{
+        team1: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Team",
+            required: true
+        },
+        team2: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Team",
+            required: true
+        }
+    }],
+
     playground: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Playground"

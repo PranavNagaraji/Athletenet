@@ -20,7 +20,7 @@ const clubSchema = new mongoose.Schema({
     },
 
     specialization: {
-        type: [String],
+        type: String,
         default: [],
         // required: true
     },

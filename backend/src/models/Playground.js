@@ -14,7 +14,22 @@ const playgroundSchema = new mongoose.Schema({
         default: null
     },
 
-    sports: [String],
+    sports: {
+        type: [String],
+        ref: "Sport",
+        default: []
+    },
+
+    size: {
+        length: {
+            type: Number, // meters
+            required: true
+        },
+        width: {
+            type: Number, // meters
+            required: true
+        }
+    },
 
     status: {
         type: String,
