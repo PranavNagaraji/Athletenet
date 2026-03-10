@@ -20,15 +20,12 @@ export function createCookie(res, userId, userRole) {
 
 export async function checkCookie(req, res, next) {
     const token = req.cookies.token;
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
-
+    if (!token) return next(); //allow login if no cookie
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.id);
-        if (!user) return res.status(401).json({ message: "Unauthorized" });
-        req.user = user;
-        next();
+        req.user = decoded;
+        return res.status(200).json({ message: "Already logged in" });
     } catch {
-        return res.status(401).json({ message: "Unauthorized" });
+        return next();
     }
 }
