@@ -1,8 +1,14 @@
+import Club from "../models/Club.js";
 import Playground from "../models/Playground.js";
 
 export const createPlayground = async (req, res) => {
     try {
-        const playground = await Playground.create(req.body);
+        const club = await Club.findOne({ admin: req.user._id });
+        if (!club) return res.status(404).json({ message: "Club not found" });
+        const playground = await Playground.create({
+            ...req.body,
+            club: club._id
+        });
         res.status(201).json(playground);
     } catch (error) {
         res.status(500).json({ message: error.message });

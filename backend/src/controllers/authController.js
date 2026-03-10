@@ -4,6 +4,13 @@ import Athlete from "../models/Athlete.js";
 import Coach from "../models/Coach.js";
 import Club from "../models/Club.js";
 
+export const getCurrentUser = (req, res) => {
+    if (!req.user)
+        return res.status(401).json({ message: "Not logged in" });
+    const { password, ...safeUser } = req.user.toObject();
+    res.status(200).json({ user: safeUser });
+};
+
 export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;

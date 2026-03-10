@@ -8,7 +8,7 @@ export function createCookie(res, userId, userRole) {
         { expiresIn: "7d" },
     );
 
-    console.log("Generated Token: ", token); // Print token
+    console.log("Generated Token: ", token); // token print
 
     res.cookie("token", token, {
         httpOnly: true,
@@ -23,8 +23,10 @@ export async function checkCookie(req, res, next) {
     if (!token) return next(); //allow login if no cookie
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
-        return res.status(200).json({ message: "Already logged in" });
+        const user = await User.findById(decoded.id);
+        if (!user) return next();
+        req.user = user;
+        next();
     } catch {
         return next();
     }

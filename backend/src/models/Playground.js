@@ -16,7 +16,18 @@ const playgroundSchema = new mongoose.Schema({
 
     sports: {
         type: [String],
-        ref: "Sport",
+        enum: [
+            "football", "cricket", "basketball",
+            "volleyball", "tennis", "badminton",
+            "table_tennis", "hockey", "rugby",
+            "baseball", "softball", "golf",
+            "squash", "kabaddi", "handball",
+            "futsal", "swimming", "athletics",
+            "running", "long_jump", "high_jump",
+            "triple_jump", "pole_vault", "shot_put",
+            "discus_throw", "javelin_throw", "hammer_throw",
+            "cycling", "skating", "gymnastics",
+        ],
         default: []
     },
 

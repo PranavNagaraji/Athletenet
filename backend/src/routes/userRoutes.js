@@ -7,6 +7,8 @@ import {
     deleteUserById
 } from "../controllers/userController.js";
 
+// Completely Untested... Do i need to create an admin
+
 const router = express.Router();
 
 router.get("/", getAllUsers);
