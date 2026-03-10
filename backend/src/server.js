@@ -10,6 +10,8 @@ import joinRequestRouter from "./routes/joinRequestRoutes.js";
 import teamRouter from "./routes/teamRoutes.js";
 import playGroundRouter from "./routes/playGroundRoutes.js";
 import playGroundBookingRouter from "./routes/playGroundBookingRoutes.js";
+import competitionRouter from "./routes/competitionRoutes.js";
+
 import "dotenv/config";
 
 connectDB();
@@ -29,6 +31,7 @@ app.use('/api/join-request', joinRequestRouter);
 app.use('/api/team', teamRouter);
 app.use('/api/playground', playGroundRouter);
 app.use('/api/booking', playGroundBookingRouter);
+app.use('/api/competition', competitionRouter);
 
 app.listen(5000, () => {
   console.log(`Server is running on port ${port}`);

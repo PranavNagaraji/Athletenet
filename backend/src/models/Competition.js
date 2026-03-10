@@ -51,8 +51,18 @@ const competitionSchema = new mongoose.Schema({
         type: String,
         enum: ["upcoming", "ongoing", "completed"],
         default: "upcoming"
-    }
+    },
 
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Club",
+        required: true
+    },
+
+    public:{
+        type:Boolean,
+        default:true,
+    }
 }, { timestamps: true });
 
 export default mongoose.model("Competition", competitionSchema);
