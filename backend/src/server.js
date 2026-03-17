@@ -1,6 +1,8 @@
 import express from "express";
 import connectDB from "./config/db.js";
 import cookieParser from "cookie-parser";
+import cors from "cors";
+
 import authRouter from "./routes/authRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import athleteRouter from "./routes/athleteRoutes.js";
@@ -21,6 +23,10 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors({
+  origin: process.env.FRONTENDURL,
+  credentials: true
+}))
 
 app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);

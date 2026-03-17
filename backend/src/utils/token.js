@@ -13,7 +13,7 @@ export function createCookie(res, userId, userRole) {
     res.cookie("token", token, {
         httpOnly: true,
         secure: false, // true in production for HTTPS
-        sameSite: "strict",
+        sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 Days
     });
 }
