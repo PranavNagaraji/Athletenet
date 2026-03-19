@@ -5,8 +5,12 @@ import JoinRequest from "../models/JoinRequest.js";
 
 export const getMyCoachProfile = async (req, res) => {
     try {
-
-        const coach = await Coach.findOne({ user: req.user._id }).populate("user");
+        const coach = await Coach.findOne({ user: req.user._id })
+            .populate("user")
+            .populate({
+                path: "clubs",
+                populate: { path: "admin", select: "name profilePic" }
+            });
 
         if (!coach) {
             return res.status(404).json({
@@ -34,7 +38,11 @@ export const updateMyCoachProfile = async (req, res) => {
                 runValidators: true,
                 upsert: true
             })
-            .populate("user");
+            .populate("user")
+            .populate({
+                path: "clubs",
+                populate: { path: "admin", select: "name profilePic" }
+            });
         if (!coach)
             return res.status(404).json({ message: "Coach profile not found" });
         res.status(200).json(coach);

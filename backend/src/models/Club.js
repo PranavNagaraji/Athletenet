@@ -7,6 +7,15 @@ const clubSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
+    name: {
+        type: String,
+        trim: true,
+        default: null
+    },
+    profilePic: {
+        type: String,
+        default: null
+    },
 
     establishedYear: {
         type: Number,
@@ -21,9 +30,14 @@ const clubSchema = new mongoose.Schema({
 
     specialization: {
         type: String,
-        default: [],
+        default: null,
         // required: true
     },
+
+    followers: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    }],
 
 }, { timestamps: true });
 

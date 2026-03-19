@@ -1,23 +1,29 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import axios from "axios";
 
 const AuthContext = createContext();
+const API = import.meta.env.VITE_BACKEND_URL || "";
 
 export const AuthProvider = ({ children }) => {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL;
-
-    const [isAuth, setIsAuth] = useState(false);
+    const [isAuth, setIsAuth]     = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [user, setUser]         = useState(null);
 
     const checkAuth = async () => {
         setIsLoading(true);
         try {
-            await axios.get(`${backendUrl}/api/auth/me`, {
-                withCredentials: true,
-            });
-            setIsAuth(true);
-            return true;
+            const res = await fetch(`${API}/api/auth/me`, { credentials: "include" });
+            if (res.ok) {
+                const data = await res.json();
+                setUser(data.user);
+                setIsAuth(true);
+                return true;
+            } else {
+                setUser(null);
+                setIsAuth(false);
+                return false;
+            }
         } catch {
+            setUser(null);
             setIsAuth(false);
             return false;
         } finally {
@@ -25,22 +31,23 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    useEffect(() => {
-        checkAuth();
-    }, [backendUrl]);
+    const logout = async () => {
+        await fetch(`${API}/api/auth/logout`, { method: "POST", credentials: "include" });
+        setUser(null);
+        setIsAuth(false);
+    };
+
+    useEffect(() => { checkAuth(); }, []);
 
     return (
-        <AuthContext.Provider value={{ isAuth, isLoading, checkAuth, setIsAuth }}>
+        <AuthContext.Provider value={{ isAuth, isLoading, user, checkAuth, logout, setIsAuth }}>
             {children}
         </AuthContext.Provider>
     );
 };
 
-// safer hook
 export const useAuth = () => {
     const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error("useAuth must be used inside AuthProvider");
-    }
+    if (!context) throw new Error("useAuth must be used inside AuthProvider");
     return context;
 };

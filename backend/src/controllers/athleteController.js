@@ -6,7 +6,10 @@ export const getMyProfile = async (req, res) => {
     try {
         const athlete = await Athlete.findOne({ user: req.user._id })
             .populate("user")
-            .populate("clubs", "user");
+            .populate({
+                path: "clubs",
+                populate: { path: "admin", select: "name profilePic" }
+            });
         if (!athlete)
             return res.status(404).json({ message: "Athlete not found" });
         return res.status(200).json(athlete);
@@ -26,7 +29,10 @@ export const updateMyProfile = async (req, res) => {
                 runValidators: true,
                 upsert: true
             }
-        ).populate("clubs", "user");
+        ).populate({
+            path: "clubs",
+            populate: { path: "admin", select: "name profilePic" }
+        });
         if (!athlete)
             return res.status(404).json({ message: "Athlete not found" });
         return res.status(200).json(athlete);
@@ -65,3 +71,12 @@ export const getMyJoinRequests = async (req, res) => {
 //         res.status(500).json({ message: error.message });
 //     }
 // }
+
+export const getAllAthletes = async (req, res) => {
+    try {
+        const athletes = await Athlete.find().populate("user");
+        res.status(200).json(athletes);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}

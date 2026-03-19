@@ -6,8 +6,8 @@ import jwt from "jsonwebtoken";
 
 export const createJoinRequest = async (req, res) => {
     try {
-        const { clubId } = req.body;
-        const club = await Club.findOne({ admin: clubId });
+        const { clubId, message } = req.body;
+        const club = await Club.findById(clubId); // Fix: clubId sent from frontend is the actual Club _id
         if (!club)
             return res.status(404).json({ message: "Club not found" });
         const token = req.cookies.token;
@@ -19,18 +19,18 @@ export const createJoinRequest = async (req, res) => {
             const athlete = await Athlete.findOne({ user: req.user._id });
             if (!athlete)
                 return res.status(404).json({ message: "Athlete not found" });
-            if (athlete.clubs.includes(club.admin))
+            if (athlete.clubs.includes(club._id))
                 return res.status(400).json({ message: "You are already a member of this club" });
         } else if (role == 'coach') {
             const coach = await Coach.findOne({ user: req.user._id });
             if (!coach)
                 return res.status(404).json({ message: "Coach not found" });
-            if (coach.clubs.includes(club.admin))
+            if (coach.clubs.includes(club._id))
                 return res.status(400).json({ message: "You are already a member of this club" });
         }
-        const existingRequest = await JoinRequest.findOne({ user: req.user._id, club: club.admin, status: "pending" });
+        const existingRequest = await JoinRequest.findOne({ user: req.user._id, club: club._id, status: "pending" });
         if (existingRequest) return res.status(400).json({ message: "You have already sent a join request to this club" });
-        const joinRequest = await JoinRequest.create({ user: req.user._id, club: club.admin });
+        const joinRequest = await JoinRequest.create({ user: req.user._id, club: club._id, message });
         res.status(200).json({ message: "Join request sent successfully", joinRequest });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -41,7 +41,7 @@ export const getAllJoinRequests = async (req, res) => {
     try {
         const club = await Club.findOne({ admin: req.user._id });
         if (!club) return res.status(404).json({ message: "Club not found" });
-        const joinRequests = await JoinRequest.find({ club: club.admin }).populate("user").populate("club");
+        const joinRequests = await JoinRequest.find({ club: club._id }).populate("user").populate("club");
         return res.status(200).json(joinRequests);
     } catch (error) {
         return res.status(500).json({ message: error.message });
@@ -52,7 +52,7 @@ export const getAthleteJoinRequests = async (req, res) => {
     try {
         const club = await Club.findOne({ admin: req.user._id });
         if (!club) return res.status(404).json({ message: "Club not found" });
-        const joinRequests = await JoinRequest.find({ club: club.admin })
+        const joinRequests = await JoinRequest.find({ club: club._id })
             .populate({
                 path: "user",
                 match: { role: "athlete" }
@@ -68,7 +68,7 @@ export const getCoachJoinRequests = async (req, res) => {
     try {
         const club = await Club.findOne({ admin: req.user._id });
         if (!club) return res.status(404).json({ message: "Club not found" });
-        const joinRequests = await JoinRequest.find({ club: club.admin })
+        const joinRequests = await JoinRequest.find({ club: club._id })
             .populate({
                 path: "user",
                 match: { role: "coach" }
@@ -87,7 +87,7 @@ export const acceptJoinRequest = async (req, res) => {
         const joinRequest = await JoinRequest.findById(requestId).populate("user");
         if (!joinRequest) return res.status(404).json({ message: "Join request not found" });
 
-        const club = await Club.findOne({ admin: joinRequest.club });
+        const club = await Club.findById(joinRequest.club); // Fix: lookup by _id, not admin
         if (!club) return res.status(404).json({ message: "Club not found" });
 
         if (joinRequest.status !== "pending")
@@ -104,8 +104,8 @@ export const acceptJoinRequest = async (req, res) => {
             const athlete = await Athlete.findOne({ user: user._id });
             if (!athlete) return res.status(404).json({ message: "Athlete not found" });
 
-            if (!athlete.clubs.includes(club.admin)) {
-                athlete.clubs.push(club.admin);
+            if (!athlete.clubs.includes(club._id)) {
+                athlete.clubs.push(club._id);
                 await athlete.save();
             }
 
@@ -113,8 +113,8 @@ export const acceptJoinRequest = async (req, res) => {
             const coach = await Coach.findOne({ user: user._id });
             if (!coach) return res.status(404).json({ message: "Coach not found" });
 
-            if (!coach.clubs.includes(club.admin)) {
-                coach.clubs.push(club.admin);
+            if (!coach.clubs.includes(club._id)) {
+                coach.clubs.push(club._id);
                 await coach.save();
             }
         }

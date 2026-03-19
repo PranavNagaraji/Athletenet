@@ -4,13 +4,16 @@ import {
     getUserById,
     updateUserNameById,
     updateUserPasswordById,
-    deleteUserById
+    deleteUserById,
+    updateProfile
 } from "../controllers/userController.js";
+import { checkCookie } from "../utils/token.js";
 
 // Completely Untested... Do i need to create an admin
 
 const router = express.Router();
 
+router.put("/profile", checkCookie, updateProfile);
 router.get("/", getAllUsers);
 router.get("/:id", getUserById);
 router.put("/name/:id", updateUserNameById);

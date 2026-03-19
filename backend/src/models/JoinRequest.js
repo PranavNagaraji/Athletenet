@@ -12,6 +12,10 @@ const joinRequestSchema = new mongoose.Schema({
         ref: "Club",
         required: true
     },
+    message: {
+        type: String,
+        trim: true
+    },
     status: {
         type: String,
         enum: ["pending", "accepted", "rejected"],

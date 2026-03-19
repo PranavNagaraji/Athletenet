@@ -5,6 +5,7 @@ import {
     updateMyProfile,
     getNearbyClubs,
     getMyJoinRequests,
+    getAllAthletes
 } from "../controllers/athleteController.js";
 
 const router = express.Router();
@@ -13,5 +14,6 @@ router.get("/me", protect, authorize("athlete"), getMyProfile);
 router.put("/me", protect, authorize("athlete"), updateMyProfile);
 router.get("/nearby-clubs", protect, authorize("athlete"), getNearbyClubs); // Add Geo Based Code
 router.get("/join-requests", protect, authorize("athlete"), getMyJoinRequests);
+router.get("/all", getAllAthletes);
 
 export default router;

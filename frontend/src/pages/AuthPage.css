@@ -1,0 +1,381 @@
+/* =========================================================
+   AuthPage.css  – Athletenet Premium Auth UI  (FIXED)
+   ========================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Bebas+Neue&display=swap');
+
+:root {
+  --primary:      #f97316;
+  --primary-dark: #c2410c;
+  --primary-glow: rgba(249,115,22,0.35);
+  --bg-dark:      #0a0a0f;
+  --bg-form:      #0f0f16;
+  --text-white:   #f0f0f0;
+  --text-muted:   #9ca3af;
+  --input-bg:     rgba(255,255,255,0.05);
+  --anim:         0.65s cubic-bezier(0.77,0,0.175,1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── ROOT ─────────────────────────────────────────────── */
+.auth-root {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-form);
+  display: flex;
+}
+
+/* ── FORM PANELS (always visible, fixed halves) ──────── */
+.auth-form-panel {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-form);
+  z-index: 1;
+  /* NO transforms on forms - the overlay covers them naturally */
+}
+.auth-login-panel  { left: 0; }
+.auth-signup-panel { right: 0; }
+
+/* ── OVERLAY (50% wide, starts RIGHT, slides to LEFT) ── */
+.auth-overlay-panel {
+  position: absolute;
+  top: 0;
+  left: 50%;           /* ← LOGIN MODE: covers the right half (signup panel) */
+  width: 50%;
+  height: 100%;
+  z-index: 10;
+  overflow: hidden;
+  border-radius: 24px 0 0 24px;
+  box-shadow: -6px 0 40px rgba(0,0,0,0.6);
+  transition: transform var(--anim), border-radius var(--anim), box-shadow var(--anim);
+}
+
+/* SIGNUP MODE: slide overlay LEFT to cover the login panel */
+.mode-signup .auth-overlay-panel {
+  transform: translateX(-100%);
+  border-radius: 0 24px 24px 0;
+  box-shadow: 6px 0 40px rgba(0,0,0,0.6);
+}
+
+/* Sports background image + gradient */
+.auth-overlay-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(10,10,15,0.65) 0%, rgba(249,115,22,0.22) 100%),
+    url('https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1000&q=80&auto=format&fit=crop')
+    center/cover no-repeat;
+  z-index: 0;
+}
+/* Orange accent bottom bar */
+.auth-overlay-panel::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%; height: 3px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  z-index: 2;
+}
+
+/* ── OVERLAY INNER: 200% wide, slides to show correct face */
+.overlay-inner {
+  position: relative;
+  display: flex;
+  width: 200%;
+  height: 100%;
+  z-index: 1;
+  /* Login mode → show RIGHT face (overlay-right) which is "Your Arena Awaits" */
+  transform: translateX(-50%);
+  transition: transform var(--anim);
+}
+
+/* Signup mode → show LEFT face (overlay-left) which is "Welcome Back" */
+.mode-signup .overlay-inner {
+  transform: translateX(0%);
+}
+
+.overlay-left,
+.overlay-right {
+  flex: 0 0 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.overlay-content {
+  max-width: 340px;
+  text-align: center;
+}
+
+/* ── Brand badge ── */
+.brand-badge {
+  display: inline-block;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.3em;
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+  padding: 0.3rem 1.1rem;
+  border-radius: 100px;
+  margin-bottom: 1.8rem;
+  background: rgba(249,115,22,0.08);
+  backdrop-filter: blur(6px);
+}
+
+.overlay-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  letter-spacing: 0.04em;
+  color: #fff;
+  line-height: 1.1;
+  margin-bottom: 1.1rem;
+  text-shadow: 0 2px 24px rgba(0,0,0,0.5);
+}
+
+.overlay-sub {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.72);
+  line-height: 1.7;
+  margin-bottom: 2.2rem;
+}
+
+.overlay-btn {
+  display: inline-block;
+  padding: 0.82rem 2.4rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fff;
+  background: transparent;
+  border: 2px solid rgba(255,255,255,0.85);
+  border-radius: 100px;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s, transform 0.2s, box-shadow 0.25s;
+}
+.overlay-btn:hover {
+  background: #fff;
+  color: var(--bg-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255,255,255,0.15);
+}
+
+/* ── FORM INNER ───────────────────────────────────────── */
+.form-inner {
+  width: 100%;
+  max-width: 380px;
+  padding: 2.5rem 2.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.form-logo {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  animation: pulse-glow 2.5s ease-in-out infinite;
+}
+
+.form-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.2rem;
+  letter-spacing: 0.06em;
+  color: var(--text-white);
+  margin-bottom: 0.35rem;
+}
+
+.form-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 1.8rem;
+}
+
+/* ── Auth form ── */
+.auth-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+/* ── Input group ── */
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--input-bg);
+  border: 1.5px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+.input-group:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+.input-icon {
+  flex-shrink: 0;
+  padding: 0 0.75rem 0 1rem;
+  font-size: 1rem;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.input-group input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-white);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.92rem;
+  padding: 0.9rem 1rem 0.9rem 0;
+}
+.input-group input::placeholder { color: var(--text-muted); }
+
+/* ── Role picker ── */
+.role-picker {
+  display: flex;
+  gap: 0.6rem;
+  width: 100%;
+  margin: 0.1rem 0;
+}
+.role-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem 0.3rem;
+  border: 1.5px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  background: var(--input-bg);
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  user-select: none;
+}
+.role-card input { display: none; }
+.role-card .role-icon { font-size: 1.4rem; }
+.role-card .role-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+.role-card.selected {
+  border-color: var(--primary);
+  background: rgba(249,115,22,0.1);
+}
+.role-card.selected .role-label { color: var(--primary); }
+.role-card:hover:not(.selected) { transform: translateY(-2px); border-color: rgba(255,255,255,0.2); }
+
+/* ── Error ── */
+.auth-error {
+  background: rgba(239,68,68,0.12);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  color: #f87171;
+  font-size: 0.82rem;
+  text-align: center;
+  animation: shake 0.4s ease;
+}
+
+/* ── Submit button ── */
+.auth-submit-btn {
+  width: 100%;
+  padding: 0.95rem;
+  margin-top: 0.2rem;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 20px rgba(249,115,22,0.35);
+}
+.auth-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(249,115,22,0.55);
+}
+.auth-submit-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+/* Shine sweep */
+.auth-submit-btn::after {
+  content: '';
+  position: absolute;
+  top: -50%; left: -75%;
+  width: 50%; height: 200%;
+  background: rgba(255,255,255,0.15);
+  transform: skewX(-20deg);
+  transition: left 0.5s;
+}
+.auth-submit-btn:hover::after { left: 125%; }
+
+/* ── Loader ── */
+.spinner-icon {
+  animation: spin 0.7s linear infinite;
+  display: block;
+}
+
+/* ── Mobile switch ── */
+.form-switch-mobile {
+  margin-top: 1.4rem;
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  display: none;
+}
+.form-switch-mobile button {
+  background: none; border: none;
+  color: var(--primary); font-weight: 600;
+  cursor: pointer; font-size: inherit; padding: 0;
+}
+
+/* ── Ambient glow BG ── */
+.auth-root::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(circle at 25% 75%, rgba(249,115,22,0.06) 0%, transparent 55%),
+    radial-gradient(circle at 75% 25%, rgba(249,115,22,0.04) 0%, transparent 45%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ── Animations ── */
+@keyframes spin      { to { transform: rotate(360deg); } }
+@keyframes shake     { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
+@keyframes pulse-glow {
+  0%,100% { filter: drop-shadow(0 0 10px var(--primary)); }
+  50%      { filter: drop-shadow(0 0 22px var(--primary)) drop-shadow(0 0 6px #fff8); }
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .auth-overlay-panel { display: none; }
+  .auth-form-panel {
+    position: relative;
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+  }
+  .mode-login  .auth-signup-panel { display: none; }
+  .mode-signup .auth-login-panel  { display: none; }
+  .form-switch-mobile { display: block; }
+  .form-inner { padding: 2.5rem 1.5rem; max-width: 100%; }
+}

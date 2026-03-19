@@ -7,7 +7,8 @@ import {
     getClubById,
     getCoachesByClub,
     getAthletesByClub,
-    removeUserFromClub
+    removeUserFromClub,
+    toggleFollowClub
 } from "../controllers/clubController.js";
 
 const router = express.Router();
@@ -19,5 +20,6 @@ router.get("/:id", getClubById);
 router.get("/coaches/:id", getCoachesByClub);
 router.get("/athlete/:id", getAthletesByClub);
 router.post("/remove-user", protect, authorize("club"), removeUserFromClub);
+router.post("/:id/follow", protect, toggleFollowClub);
 
 export default router;

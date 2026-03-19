@@ -67,6 +67,31 @@ const playgroundSchema = new mongoose.Schema({
         type: String,
         trim: true,
         required: true
+    },
+    images: {
+        type: [String],
+        default: []
+    },
+    openTime: {
+        type: String, // e.g. "06:00"
+        default: "06:00"
+    },
+    closeTime: {
+        type: String, // e.g. "22:00"
+        default: "22:00"
+    },
+    slotDuration: {
+        type: Number, // in minutes
+        default: 60
+    },
+    customTimings: [{
+        start: String, // "HH:mm"
+        end: String    // "HH:mm"
+    }],
+    availabilityMode: {
+        type: String,
+        enum: ["open", "manual"],
+        default: "open"
     }
 
 }, { timestamps: true });

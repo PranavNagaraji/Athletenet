@@ -10,6 +10,8 @@ import {
     getAllTeamsByClub,
     getTeamById,
     deleteTeamById,
+    joinTeamAsAthlete,
+    joinTeamAsCoach
 } from "../controllers/teamController.js";
 
 const router = express.Router();
@@ -23,5 +25,7 @@ router.put("/:id", protect, authorize("club"), updateTeamName);
 router.get("/club/:clubId", getAllTeamsByClub);
 router.get("/:id", getTeamById);
 router.delete("/:id", protect, authorize("club"), deleteTeamById); 
+router.post("/join", protect, authorize("athlete"), joinTeamAsAthlete);
+router.post("/join/coach", protect, authorize("coach"), joinTeamAsCoach);
 
 export default router;

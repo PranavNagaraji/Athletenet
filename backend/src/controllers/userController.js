@@ -9,6 +9,24 @@ export const getAllUsers = async (req, res) => {
     }
 };
 
+export const updateProfile = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { name, profilePic } = req.body;
+        
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        if (name) user.name = name;
+        if (profilePic !== undefined) user.profilePic = profilePic;
+
+        await user.save();
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 export const getUserById = async (req, res) => {
     try {
         const userId = req.params.id;
