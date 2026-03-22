@@ -635,8 +635,6 @@ export default function CoachTeams() {
           }}
         />
       )}
-
-      )}
     </>
   );
 }

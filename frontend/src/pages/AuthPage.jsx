@@ -27,9 +27,11 @@ export default function AuthPage({ defaultMode = "login" }) {
     setLoading(true);
 
     const fd = new FormData(e.target);
+    const password = fd.get("password");
+    const confirmPassword = fd.get("confirmPassword");
     const payload = {
       email: normalizeText(fd.get("email")),
-      password: fd.get("password"),
+      password,
     };
 
     if (mode === "signup") {
@@ -45,6 +47,12 @@ export default function AuthPage({ defaultMode = "login" }) {
 
     if (!isStrongPassword(payload.password)) {
       setError("Password must be at least 8 characters long.");
+      setLoading(false);
+      return;
+    }
+
+    if (mode === "signup" && password !== confirmPassword) {
+      setError("Passwords do not match. Please verify both fields.");
       setLoading(false);
       return;
     }
@@ -138,8 +146,20 @@ export default function AuthPage({ defaultMode = "login" }) {
               <span className="input-icon"><Lock size={18} /></span>
               <input type="password" name="password" placeholder="Password" required autoComplete="new-password" minLength={8} maxLength={128} />
             </div>
+            <div className="input-group animate-slide-up stagger-3">
+              <span className="input-icon"><Lock size={18} /></span>
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="Confirm password"
+                required
+                autoComplete="new-password"
+                minLength={8}
+                maxLength={128}
+              />
+            </div>
 
-            <div className="role-picker animate-slide-up stagger-3">
+            <div className="role-picker animate-slide-up stagger-4">
               {[
                 { value: "athlete", icon: <PersonStanding size={24} />, label: "Athlete" },
                 { value: "coach", icon: <Shield size={24} />, label: "Coach" },
