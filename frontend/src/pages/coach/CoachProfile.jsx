@@ -9,12 +9,14 @@ const API = import.meta.env.VITE_BACKEND_URL;
 export default function CoachProfile() {
   const { user, checkAuth } = useAuth();
   const [form, setForm] = useState({ height: "", weight: "", age: "", experience: "", specialization: "", name: "", profilePic: "" });
+  const [savedForm, setSavedForm] = useState(null);
   const [coachData, setCoachData] = useState(null);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [msg, setMsg] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -22,9 +24,7 @@ export default function CoachProfile() {
       fetch(`${API}/api/coach/join-request`, { credentials: "include" }).then((r) => r.json()),
     ])
       .then(([coachRes, requestsRes]) => {
-        setCoachData(coachRes);
-        setRequests(Array.isArray(requestsRes) ? requestsRes : []);
-        setForm({
+        const loadedForm = {
           age: coachRes.age || "",
           height: coachRes.height || "",
           weight: coachRes.weight || "",
@@ -32,13 +32,21 @@ export default function CoachProfile() {
           specialization: coachRes.specialization || "",
           name: coachRes.user?.name || user?.name || "",
           profilePic: coachRes.user?.profilePic || user?.profilePic || "",
-        });
+        };
+        setCoachData(coachRes);
+        setRequests(Array.isArray(requestsRes) ? requestsRes : []);
+        setForm(loadedForm);
+        setSavedForm(loadedForm);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [user]);
 
   const handleUpload = async (e) => {
+    if (!isEditing) {
+      setMsg({ type: "error", text: "Click edit to update your profile photo." });
+      return;
+    }
     const file = e.target.files[0];
     if (!file) return;
     const fileError = validateFile(file);
@@ -103,6 +111,8 @@ export default function CoachProfile() {
         }),
       ]);
       if (resObj.ok && resUser.ok) {
+        setSavedForm({ ...form });
+        setIsEditing(false);
         setMsg({ type: "success", text: "Profile updated successfully!" });
         checkAuth();
       } else {
@@ -113,6 +123,17 @@ export default function CoachProfile() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleStartEdit = () => {
+    setIsEditing(true);
+    setMsg(null);
+  };
+
+  const handleCancelEdit = () => {
+    if (savedForm) setForm(savedForm);
+    setIsEditing(false);
+    setMsg(null);
   };
 
   if (loading) {
@@ -252,9 +273,9 @@ export default function CoachProfile() {
                     {form.name || "Coach"}
                   </div>
                 </div>
-                <label className="btn-ghost" style={{ cursor: "pointer", display: "inline-flex", width: "fit-content" }}>
+                <label className="btn-ghost" style={{ cursor: isEditing ? "pointer" : "not-allowed", display: "inline-flex", width: "fit-content", opacity: isEditing ? 1 : 0.65 }}>
                   {uploading ? "Uploading..." : "Upload Photo"}
-                  <input type="file" accept="image/*" hidden onChange={handleUpload} disabled={uploading} />
+                  <input type="file" accept="image/*" hidden onChange={handleUpload} disabled={!isEditing || uploading} />
                 </label>
                 <p style={{ fontSize: "0.75rem", color: "var(--theme-muted)", margin: 0 }}>JPG, PNG or WEBP. Max 5MB.</p>
               </div>
@@ -269,39 +290,96 @@ export default function CoachProfile() {
           </div>
 
           <div className="card" style={{ display: "flex", flexDirection: "column", gap: "1.5rem", padding: "1.6rem", background: "linear-gradient(180deg, var(--theme-surface) 0%, color-mix(in srgb, var(--theme-surface) 88%, var(--theme-surface-2) 12%) 100%)" }}>
-            <h2 style={{ fontSize: "1.05rem", fontWeight: 800, borderBottom: "1px solid var(--theme-border)", paddingBottom: "0.8rem", margin: 0, color: "var(--theme-muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-              Edit Coaching Profile
-            </h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: "1rem" }}>
+              <h2 style={{ fontSize: "1.05rem", fontWeight: 800, borderBottom: "1px solid var(--theme-border)", paddingBottom: "0.8rem", margin: 0, color: "var(--theme-muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                Edit Coaching Profile
+              </h2>
+              {!isEditing && (
+                <button type="button" className="btn-ghost" onClick={handleStartEdit} style={{ whiteSpace: "nowrap" }}>
+                  Edit Profile
+                </button>
+              )}
+            </div>
 
             <form onSubmit={handleSave} className="form-grid">
               <div className="field-group">
                 <label className="field-label">Full Name</label>
-                <input className="field-input" type="text" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required minLength={VALIDATION_LIMITS.nameMin} maxLength={VALIDATION_LIMITS.nameMax} />
+                <input
+                  className="field-input"
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  required
+                  minLength={VALIDATION_LIMITS.nameMin}
+                  maxLength={VALIDATION_LIMITS.nameMax}
+                  disabled={!isEditing}
+                />
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "1rem" }}>
                 <div className="field-group">
                   <label className="field-label">Age</label>
-                  <input className="field-input" type="number" min="18" max="100" value={form.age} onChange={(e) => setForm((f) => ({ ...f, age: e.target.value }))} />
+                  <input
+                    className="field-input"
+                    type="number"
+                    min="18"
+                    max="100"
+                    value={form.age}
+                    onChange={(e) => setForm((f) => ({ ...f, age: e.target.value }))}
+                    disabled={!isEditing}
+                  />
                 </div>
                 <div className="field-group">
                   <label className="field-label">Height (cm)</label>
-                  <input className="field-input" type="number" min="120" max="260" value={form.height} onChange={(e) => setForm((f) => ({ ...f, height: e.target.value }))} />
+                  <input
+                    className="field-input"
+                    type="number"
+                    min="120"
+                    max="260"
+                    value={form.height}
+                    onChange={(e) => setForm((f) => ({ ...f, height: e.target.value }))}
+                    disabled={!isEditing}
+                  />
                 </div>
                 <div className="field-group">
                   <label className="field-label">Weight (kg)</label>
-                  <input className="field-input" type="number" min="35" max="300" value={form.weight} onChange={(e) => setForm((f) => ({ ...f, weight: e.target.value }))} />
+                  <input
+                    className="field-input"
+                    type="number"
+                    min="35"
+                    max="300"
+                    value={form.weight}
+                    onChange={(e) => setForm((f) => ({ ...f, weight: e.target.value }))}
+                    disabled={!isEditing}
+                  />
                 </div>
               </div>
 
               <div className="form-grid form-grid-2">
                 <div className="field-group">
                   <label className="field-label">Experience (Years)</label>
-                  <input className="field-input" type="number" min="0" max="80" value={form.experience} onChange={(e) => setForm((f) => ({ ...f, experience: e.target.value }))} placeholder="e.g 5" />
+                  <input
+                    className="field-input"
+                    type="number"
+                    min="0"
+                    max="80"
+                    value={form.experience}
+                    onChange={(e) => setForm((f) => ({ ...f, experience: e.target.value }))}
+                    placeholder="e.g 5"
+                    disabled={!isEditing}
+                  />
                 </div>
                 <div className="field-group">
                   <label className="field-label">Specialization</label>
-                  <input className="field-input" type="text" value={form.specialization} onChange={(e) => setForm((f) => ({ ...f, specialization: e.target.value }))} placeholder="e.g Head Soccer Coach" maxLength={VALIDATION_LIMITS.specializationMax} />
+                  <input
+                    className="field-input"
+                    type="text"
+                    value={form.specialization}
+                    onChange={(e) => setForm((f) => ({ ...f, specialization: e.target.value }))}
+                    placeholder="e.g Head Soccer Coach"
+                    maxLength={VALIDATION_LIMITS.specializationMax}
+                    disabled={!isEditing}
+                  />
                 </div>
               </div>
 
@@ -310,9 +388,20 @@ export default function CoachProfile() {
                 <span style={{ userSelect: "all" }}>{user?._id || "Loading..."}</span>
               </div>
 
-              <button type="submit" className="btn-primary" disabled={saving} style={{ width: "100%", justifyContent: "center", padding: "1rem" }}>
-                {saving ? <Loader2 size={16} className="spinner-icon" /> : <Save size={16} />} Save Profile
-              </button>
+              {isEditing ? (
+                <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", width: "100%" }}>
+                  <button type="button" className="btn-ghost" onClick={handleCancelEdit} disabled={saving} style={{ flex: 1, minWidth: 120 }}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-primary" disabled={saving} style={{ flex: 1, minWidth: 140, justifyContent: "center", padding: "1rem" }}>
+                    {saving ? <Loader2 size={16} className="spinner-icon" /> : <Save size={16} />} Save Profile
+                  </button>
+                </div>
+              ) : (
+                <div style={{ padding: "1rem", background: "var(--theme-surface-2)", borderRadius: 14, border: "1px solid var(--theme-border)", color: "var(--theme-muted)", fontSize: "0.95rem" }}>
+                  Tap edit to unlock your coaching details and save your latest profile update.
+                </div>
+              )}
             </form>
           </div>
         </div>
