@@ -11,6 +11,9 @@ export default function AuthPage({ defaultMode = "login" }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState("athlete");
+  const [passwordValue, setPasswordValue] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmTouched, setConfirmTouched] = useState(false);
 
   const backend_url = import.meta.env.VITE_BACKEND_URL;
   const navigate = useNavigate();
@@ -18,6 +21,9 @@ export default function AuthPage({ defaultMode = "login" }) {
 
   const switchMode = (newMode) => {
     setError("");
+    setPasswordValue("");
+    setConfirmPassword("");
+    setConfirmTouched(false);
     setMode(newMode);
   };
 
@@ -27,8 +33,8 @@ export default function AuthPage({ defaultMode = "login" }) {
     setLoading(true);
 
     const fd = new FormData(e.target);
-    const password = fd.get("password");
-    const confirmPassword = fd.get("confirmPassword");
+    const password = passwordValue || fd.get("password");
+    const confirmPasswordValue = confirmPassword || fd.get("confirmPassword");
     const payload = {
       email: normalizeText(fd.get("email")),
       password,
@@ -51,7 +57,7 @@ export default function AuthPage({ defaultMode = "login" }) {
       return;
     }
 
-    if (mode === "signup" && password !== confirmPassword) {
+    if (mode === "signup" && password !== confirmPasswordValue) {
       setError("Passwords do not match. Please verify both fields.");
       setLoading(false);
       return;
@@ -103,14 +109,24 @@ export default function AuthPage({ defaultMode = "login" }) {
             <p className="form-subtitle">Welcome back, champion</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="auth-form" autoComplete="on">
+          <form onSubmit={handleSubmit} className="auth-form" autoComplete="on" noValidate>
             <div className="input-group animate-slide-up stagger-2">
               <span className="input-icon"><Mail size={18} /></span>
               <input type="email" name="email" placeholder="Email address" required autoComplete="email" maxLength={120} />
             </div>
             <div className="input-group animate-slide-up stagger-3">
               <span className="input-icon"><Lock size={18} /></span>
-              <input type="password" name="password" placeholder="Password" required autoComplete="current-password" minLength={8} maxLength={128} />
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                required
+                autoComplete="current-password"
+                minLength={8}
+                maxLength={128}
+                value={passwordValue}
+                onChange={(e) => setPasswordValue(e.target.value)}
+              />
             </div>
             {error && <div className="auth-error animate-slide-up">{error}</div>}
             <button type="submit" className="auth-submit-btn animate-slide-up stagger-4" disabled={loading}>
@@ -133,7 +149,7 @@ export default function AuthPage({ defaultMode = "login" }) {
             <p className="form-subtitle">Create your Athletenet account</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="auth-form" autoComplete="on">
+          <form onSubmit={handleSubmit} className="auth-form" autoComplete="on" noValidate>
             <div className="input-group animate-slide-up stagger-1">
               <span className="input-icon"><User size={18} /></span>
               <input type="text" name="name" placeholder="Full name" required autoComplete="name" minLength={VALIDATION_LIMITS.nameMin} maxLength={VALIDATION_LIMITS.nameMax} />
@@ -144,7 +160,17 @@ export default function AuthPage({ defaultMode = "login" }) {
             </div>
             <div className="input-group animate-slide-up stagger-2">
               <span className="input-icon"><Lock size={18} /></span>
-              <input type="password" name="password" placeholder="Password" required autoComplete="new-password" minLength={8} maxLength={128} />
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                required
+                autoComplete="new-password"
+                minLength={8}
+                maxLength={128}
+                value={passwordValue}
+                onChange={(e) => setPasswordValue(e.target.value)}
+              />
             </div>
             <div className="input-group animate-slide-up stagger-3">
               <span className="input-icon"><Lock size={18} /></span>
@@ -156,8 +182,14 @@ export default function AuthPage({ defaultMode = "login" }) {
                 autoComplete="new-password"
                 minLength={8}
                 maxLength={128}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                onBlur={() => setConfirmTouched(true)}
               />
             </div>
+            {confirmTouched && confirmPassword && passwordValue && passwordValue !== confirmPassword && (
+              <div className="auth-field-helper">Passwords do not match. Please check both fields.</div>
+            )}
 
             <div className="role-picker animate-slide-up stagger-4">
               {[

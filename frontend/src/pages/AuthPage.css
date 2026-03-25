@@ -491,6 +491,15 @@
   animation: slideRightFade 0.3s ease;
 }
 
+.auth-field-helper {
+  margin: 0.5rem 0 0 0;
+  color: var(--theme-danger);
+  font-family: "Inter", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 .auth-submit-btn {
   width: 100%;
   position: relative;
