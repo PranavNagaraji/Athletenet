@@ -415,6 +415,32 @@
   font-weight: 500;
 }
 
+.input-group.password-toggle-group input {
+  padding-right: 2.7rem;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: none;
+  background: transparent;
+  color: var(--theme-muted);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.password-toggle:hover,
+.password-toggle:focus-visible {
+  color: var(--theme-primary);
+}
+
 .input-group input::placeholder {
   color: var(--theme-muted);
   font-weight: 400;

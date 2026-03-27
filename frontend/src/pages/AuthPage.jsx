@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Zap, Mail, Lock, User, PersonStanding, Shield, Building2, Loader2 } from "lucide-react";
+import { Zap, Mail, Lock, User, PersonStanding, Shield, Building2, Loader2, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
 import { VALIDATION_LIMITS, isStrongPassword, isValidEmail, normalizeText } from "../utils/formValidation";
@@ -14,6 +14,8 @@ export default function AuthPage({ defaultMode = "login" }) {
   const [passwordValue, setPasswordValue] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [confirmTouched, setConfirmTouched] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const errorTimer = useRef(null);
 
   const backend_url = import.meta.env.VITE_BACKEND_URL;
@@ -45,6 +47,8 @@ export default function AuthPage({ defaultMode = "login" }) {
     setPasswordValue("");
     setConfirmPassword("");
     setConfirmTouched(false);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
     setMode(newMode);
   };
 
@@ -136,10 +140,10 @@ export default function AuthPage({ defaultMode = "login" }) {
               <span className="input-icon"><Mail size={18} /></span>
               <input type="email" name="email" placeholder="Email address" required autoComplete="email" maxLength={120} />
             </div>
-            <div className="input-group animate-slide-up stagger-3">
+            <div className="input-group password-toggle-group animate-slide-up stagger-3">
               <span className="input-icon"><Lock size={18} /></span>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 placeholder="Password"
                 required
@@ -149,6 +153,14 @@ export default function AuthPage({ defaultMode = "login" }) {
                 value={passwordValue}
                 onChange={(e) => setPasswordValue(e.target.value)}
               />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
             <div className="auth-error-slot">
               {error && <div className="auth-error">{error}</div>}
@@ -182,10 +194,10 @@ export default function AuthPage({ defaultMode = "login" }) {
               <span className="input-icon"><Mail size={18} /></span>
               <input type="email" name="email" placeholder="Email address" required autoComplete="email" maxLength={120} />
             </div>
-            <div className="input-group animate-slide-up stagger-2">
+            <div className="input-group password-toggle-group animate-slide-up stagger-2">
               <span className="input-icon"><Lock size={18} /></span>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 placeholder="Password"
                 required
@@ -195,11 +207,19 @@ export default function AuthPage({ defaultMode = "login" }) {
                 value={passwordValue}
                 onChange={(e) => setPasswordValue(e.target.value)}
               />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
-            <div className="input-group animate-slide-up stagger-3">
+            <div className="input-group password-toggle-group animate-slide-up stagger-3">
               <span className="input-icon"><Lock size={18} /></span>
               <input
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 name="confirmPassword"
                 placeholder="Confirm password"
                 required
@@ -210,6 +230,14 @@ export default function AuthPage({ defaultMode = "login" }) {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 onBlur={() => setConfirmTouched(true)}
               />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              >
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
             {confirmTouched && confirmPassword && passwordValue && passwordValue !== confirmPassword && (
               <div className="auth-field-helper">Passwords do not match. Please check both fields.</div>

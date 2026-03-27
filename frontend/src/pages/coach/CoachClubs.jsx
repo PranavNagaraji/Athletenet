@@ -118,49 +118,53 @@ export default function CoachClubs() {
               const setupLabel = club.establishedYear ? `Est. ${club.establishedYear}` : "Emerging program";
 
               return (
-                <div key={club._id} className="card entity-card" style={{ padding: "1.2rem" }}>
-                  <div className="entity-card-top">
-                    <div className="avatar-badge round">
-                      {picture ? (
-                        <img src={`${API}${picture}`} alt={clubName} />
-                      ) : (
-                        <span style={{ fontFamily: "var(--font-heading)", fontSize: "1.5rem", fontWeight: 800 }}>
-                          {clubName.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <h3>{clubName}</h3>
-                      <div className="entity-subtitle">
-                        {specialization} with room for stronger coaching structure, player development, and team culture.
+                <div key={club._id} className="card entity-card" style={{ padding: "1.2rem", position: "relative" }}>
+                  <div className="entity-card-content">
+                    <div className="entity-card-top">
+                      <div className="avatar-badge round">
+                        {picture ? (
+                          <img src={`${API}${picture}`} alt={clubName} />
+                        ) : (
+                          <span style={{ fontFamily: "var(--font-heading)", fontSize: "1.5rem", fontWeight: 800 }}>
+                            {clubName.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <h3>{clubName}</h3>
+                        <div className="entity-subtitle">
+                          {specialization} with room for stronger coaching structure, player development, and team culture.
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="detail-pills">
-                    <span className="pill pill-primary">{specialization}</span>
-                    <span className="meta-pill">{setupLabel}</span>
-                    <span className="meta-pill">{facilities.length} facilities</span>
-                    <span className="meta-pill">{club.admin?.name ? `Admin: ${club.admin.name}` : "Admin available"}</span>
-                  </div>
-
-                  <div style={{ color: "var(--theme-muted)", lineHeight: 1.7, minHeight: 54 }}>
-                    {facilities.length > 0
-                      ? `Current facility stack: ${facilities.slice(0, 3).join(", ")}${facilities.length > 3 ? "..." : ""}`
-                      : "Facilities are not listed yet, but you can still reach out and position your coaching value."}
-                  </div>
-
-                  {facilities.length > 0 ? (
                     <div className="detail-pills">
-                      {facilities.slice(0, 4).map((facility) => (
-                        <span key={facility} className="meta-pill">{facility}</span>
-                      ))}
+                      <span className="pill pill-primary">{specialization}</span>
+                      <span className="meta-pill">{setupLabel}</span>
+                      <span className="meta-pill">{facilities.length} facilities</span>
+                      <span className="meta-pill">{club.admin?.name ? `Admin: ${club.admin.name}` : "Admin available"}</span>
                     </div>
-                  ) : null}
 
-                  <button className="btn-primary" style={{ width: "100%", justifyContent: "center", marginTop: "auto" }} onClick={() => setSelectedClub(club)}>
-                    <UserPlus size={16} /> Request to Join
-                  </button>
+                    <div style={{ color: "var(--theme-muted)", lineHeight: 1.7, minHeight: 54 }}>
+                      {facilities.length > 0
+                        ? `Current facility stack: ${facilities.slice(0, 3).join(", ")}${facilities.length > 3 ? "..." : ""}`
+                        : "Facilities are not listed yet, but you can still reach out and position your coaching value."}
+                    </div>
+
+                    {facilities.length > 0 ? (
+                      <div className="detail-pills">
+                        {facilities.slice(0, 4).map((facility) => (
+                          <span key={facility} className="meta-pill">{facility}</span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="entity-card-action">
+                    <button className="btn-primary" style={{ width: "100%", justifyContent: "center" }} onClick={() => setSelectedClub(club)}>
+                      <UserPlus size={16} /> Request to Join
+                    </button>
+                  </div>
                 </div>
               );
             })}
