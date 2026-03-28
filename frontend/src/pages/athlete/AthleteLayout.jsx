@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import {
   LayoutDashboard, UserRound, Compass, Send, LogOut,
   ChevronRight, Activity, MessageSquare, MapPin, CalendarClock,
-  Trophy, Menu, X, ClipboardList, Flag
+  Trophy, Menu, X, ClipboardList, Flag, Inbox
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import ThemeToggle from "../../components/ThemeToggle";
@@ -34,6 +34,7 @@ const navGroups = [
     items: [
       { to: "/athlete/clubs", icon: Compass, label: "Browse Clubs" },
       { to: "/athlete/requests", icon: Send, label: "My Requests" },
+      { to: "/athlete/invites", icon: Inbox, label: "Invitations" },
     ],
   },
   {

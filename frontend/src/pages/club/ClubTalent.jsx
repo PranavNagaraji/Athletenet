@@ -37,19 +37,74 @@ export default function ClubTalent() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
+  const [sendingId, setSendingId] = useState(null);
+  const [memberAthleteIds, setMemberAthleteIds] = useState(new Set());
+  const [memberCoachIds, setMemberCoachIds] = useState(new Set());
+
+  const sendInvite = async (person) => {
+    if (!person?.user?._id) return;
+    const recipientId = person.user._id;
+    const recipientRole = tab === "athletes" ? "athlete" : "coach";
+    setSendingId(recipientId);
+
+    try {
+      const res = await fetch(`${API}/api/invite/send`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipientId, message: "You are invited to join our club." })
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message || "Failed to send invite");
+      alert("Invite sent successfully.");
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setSendingId(null);
+    }
+  };
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([
-      fetch(`${API}/api/athlete/all`).then(r => r.ok ? r.json() : []),
-      fetch(`${API}/api/coach/all`).then(r => r.ok ? r.json() : [])
-    ])
-    .then(([athData, coachData]) => {
-      setAthletes(Array.isArray(athData) ? athData : []);
-      setCoaches(Array.isArray(coachData) ? coachData : []);
-    })
-    .catch(() => {})
-    .finally(() => setLoading(false));
+    const loadData = async () => {
+      try {
+        const [clubRes, athRes, coachRes] = await Promise.all([
+          fetch(`${API}/api/club/profile`, { credentials: "include" }),
+          fetch(`${API}/api/athlete/all`),
+          fetch(`${API}/api/coach/all`)
+        ]);
+
+        const club = clubRes.ok ? await clubRes.json() : null;
+        const athData = athRes.ok ? await athRes.json() : [];
+        const coachData = coachRes.ok ? await coachRes.json() : [];
+
+        setAthletes(Array.isArray(athData) ? athData : []);
+        setCoaches(Array.isArray(coachData) ? coachData : []);
+
+        if (club && club._id) {
+          const [clubAthRes, clubCoachRes] = await Promise.all([
+            fetch(`${API}/api/club/athlete/${club._id}`, { credentials: "include" }),
+            fetch(`${API}/api/club/coaches/${club._id}`, { credentials: "include" })
+          ]);
+
+          const clubAthletes = clubAthRes.ok ? await clubAthRes.json() : [];
+          const clubCoaches = clubCoachRes.ok ? await clubCoachRes.json() : [];
+
+          setMemberAthleteIds(new Set(
+            Array.isArray(clubAthletes) ? clubAthletes.map(item => item.user?._id).filter(Boolean) : []
+          ));
+          setMemberCoachIds(new Set(
+            Array.isArray(clubCoaches) ? clubCoaches.map(item => item.user?._id).filter(Boolean) : []
+          ));
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
   }, []);
 
   const getFiltered = (arr) => {
@@ -64,6 +119,12 @@ export default function ClubTalent() {
   };
 
   const currentData = tab === "athletes" ? getFiltered(athletes) : getFiltered(coaches);
+
+  const isMember = (person) => {
+    const id = person?.user?._id;
+    if (!id) return false;
+    return tab === "athletes" ? memberAthleteIds.has(id) : memberCoachIds.has(id);
+  };
 
   return (
     <div style={{ padding: "1.5rem", paddingBottom: "3rem" }}>
@@ -198,6 +259,24 @@ export default function ClubTalent() {
                   {experience && <StatBadge icon={Star} label="Exp" value={`${experience}y`} />}
                   {specialization && <StatBadge icon={Dumbbell} label="Spec" value={specialization} />}
                 </div>
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1rem" }}>
+                  {isMember(person) ? (
+                    <span className="badge badge-accepted" style={{ padding: "0.65rem 0.9rem", fontSize: "0.9rem" }}>Present in club</span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      style={{ minWidth: 120 }}
+                      disabled={sendingId === person.user?._id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        sendInvite(person);
+                      }}
+                    >
+                      {sendingId === person.user?._id ? "Sending..." : "Send Invite"}
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}
@@ -263,6 +342,21 @@ export default function ClubTalent() {
                     </div>
                   </div>
                 ))}
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "1rem" }}>
+                {isMember(selected) ? (
+                  <span className="badge badge-accepted" style={{ padding: "0.75rem 1rem", fontSize: "0.95rem" }}>Present in club</span>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    disabled={sendingId === selected.user?._id}
+                    onClick={() => sendInvite(selected)}
+                  >
+                    {sendingId === selected.user?._id ? "Sending..." : "Send Invite"}
+                  </button>
+                )}
               </div>
 
               {selected.clubs?.length > 0 && (

@@ -35,6 +35,7 @@ import ClubTournaments from "./pages/club/ClubTournaments";
 import AthleteTasks from "./pages/athlete/AthleteTasks";
 import AthleteEvents from "./pages/athlete/AthleteEvents";
 import AthleteTactics from "./pages/athlete/AthleteTactics";
+import AthleteInvites from "./pages/athlete/AthleteInvites";
 
 // Coach pages
 import CoachLayout from "./pages/coach/CoachLayout";
@@ -48,6 +49,7 @@ import CoachTraining from "./pages/coach/CoachTraining";
 import CoachPerformance from "./pages/coach/CoachPerformance";
 import CoachEvents from "./pages/coach/CoachEvents";
 import CoachAthletes from "./pages/coach/CoachAthletes";
+import CoachInvites from "./pages/coach/CoachInvites";
 import CoachTasks from "./pages/coach/CoachTasks";
 import TacticDetail from "./pages/TacticDetail";
 
@@ -89,6 +91,7 @@ export default function App() {
           <Route path="joined-clubs" element={<AthleteJoinedClubs />} />
           <Route path="teams" element={<AthleteTeams />} />
           <Route path="requests" element={<AthleteRequests />} />
+          <Route path="invites" element={<AthleteInvites />} />
           <Route path="playgrounds" element={<AthletePlaygrounds />} />
           <Route path="bookings" element={<AthleteBookings />} />
           <Route path="feed" element={<AthleteFeed />} />
@@ -112,6 +115,7 @@ export default function App() {
           <Route path="performance" element={<CoachPerformance />} />
           <Route path="events" element={<CoachEvents />} />
           <Route path="athletes" element={<CoachAthletes />} />
+          <Route path="invites" element={<CoachInvites />} />
           <Route path="tasks" element={<CoachTasks />} />
           <Route path="tactics/:id" element={<TacticDetail />} />
         </Route>

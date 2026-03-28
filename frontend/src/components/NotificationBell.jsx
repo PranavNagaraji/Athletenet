@@ -94,6 +94,29 @@ function buildPerformanceNotifications(ratings) {
   }));
 }
 
+function buildInviteNotifications(role, invites) {
+  return (Array.isArray(invites) ? invites : []).slice(0, 8).map((invite) => {
+    const clubName = invite.club?.name || "A club";
+    const status = invite.status || "pending";
+    const isPending = status === "pending";
+    const isAccepted = status === "accepted";
+
+    return {
+      id: `invite-${status}-${invite._id}`,
+      icon: isPending ? "send" : isAccepted ? "check" : "alert",
+      title: isPending ? "New Club Invitation" : isAccepted ? "Invite Accepted" : "Invite Rejected",
+      body: isPending
+        ? `${clubName} invited you to join their club.`
+        : isAccepted
+          ? `You accepted the invitation from ${clubName}.`
+          : `You rejected the invitation from ${clubName}.`,
+      time: invite.updatedAt || invite.createdAt,
+      href: role === "coach" ? "/coach/invites" : "/athlete/invites",
+      urgent: isPending,
+    };
+  });
+}
+
 function buildNotifications(role, data) {
   const notifications = [];
   const now = Date.now();
@@ -155,6 +178,7 @@ function buildNotifications(role, data) {
       }
     });
 
+    notifications.push(...buildInviteNotifications(role, data?.invites));
     notifications.push(...buildEventNotifications(role, data?.events));
 
     if (role === "athlete") {
@@ -214,28 +238,35 @@ export default function NotificationBell({ role }) {
           performanceRes.ok ? performanceRes.json() : [],
         ]);
 
+        const invitesRes = await fetch(`${API}/api/invite/received`, { credentials: "include" });
+        const invitesData = invitesRes.ok ? await invitesRes.json() : [];
+
         setNotifications(buildNotifications(role, {
           requests: Array.isArray(requestsData) ? requestsData : [],
           events: Array.isArray(eventsData) ? eventsData : [],
           performance: Array.isArray(performanceData) ? performanceData : [],
+          invites: Array.isArray(invitesData) ? invitesData : [],
         }));
         return;
       }
 
       if (role === "coach") {
-        const [requestsRes, eventsRes] = await Promise.all([
+        const [requestsRes, eventsRes, invitesRes] = await Promise.all([
           fetch(`${API}/api/coach/join-request`, { credentials: "include" }),
           fetch(`${API}/api/coach/events`, { credentials: "include" }),
+          fetch(`${API}/api/invite/received`, { credentials: "include" }),
         ]);
 
-        const [requestsData, eventsData] = await Promise.all([
+        const [requestsData, eventsData, invitesData] = await Promise.all([
           requestsRes.ok ? requestsRes.json() : [],
           eventsRes.ok ? eventsRes.json() : [],
+          invitesRes.ok ? invitesRes.json() : [],
         ]);
 
         setNotifications(buildNotifications(role, {
           requests: Array.isArray(requestsData) ? requestsData : [],
           events: Array.isArray(eventsData) ? eventsData : [],
+          invites: Array.isArray(invitesData) ? invitesData : [],
         }));
       }
     } catch {

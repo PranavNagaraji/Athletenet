@@ -19,6 +19,7 @@ import tournamentRouter from "./routes/tournamentRoutes.js";
 import postRouter from "./routes/postRoutes.js";
 import trainingRouter from "./routes/trainingRoutes.js";
 import formationRouter from "./routes/formationRoutes.js";
+import inviteRouter from "./routes/inviteRoutes.js";
 import path from "path";
 
 import "dotenv/config";
@@ -54,6 +55,7 @@ app.use('/api/athlete', athleteRouter);
 app.use('/api/coach', coachRouter);
 app.use('/api/club', clubRouter);
 app.use('/api/join-request', joinRequestRouter);
+app.use('/api/invite', inviteRouter);
 app.use('/api/team', teamRouter);
 app.use('/api/playground', playGroundRouter);
 app.use('/api/booking', playGroundBookingRouter);
