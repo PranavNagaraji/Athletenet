@@ -6,6 +6,7 @@ const API = import.meta.env.VITE_BACKEND_URL;
 
 export default function CoachClubs() {
   const [clubs, setClubs] = useState([]);
+  const [joinedClubIds, setJoinedClubIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [msg, setMsg] = useState(null);
@@ -19,11 +20,21 @@ export default function CoachClubs() {
   };
 
   useEffect(() => {
-    fetch(`${API}/api/club/all`)
-      .then((response) => response.json())
-      .then((data) => setClubs(Array.isArray(data) ? data : []))
-      .catch(() => showMsg("error", "Failed to load clubs"))
-      .finally(() => setLoading(false));
+    let mounted = true;
+
+    Promise.all([
+      fetch(`${API}/api/club/all`).then((response) => response.json()),
+      fetch(`${API}/api/coach/me`, { credentials: "include" }).then((response) => response.json()),
+    ])
+      .then(([clubsData, coachData]) => {
+        if (!mounted) return;
+        setClubs(Array.isArray(clubsData) ? clubsData : []);
+        setJoinedClubIds(Array.isArray(coachData?.clubs) ? coachData.clubs.map((club) => club._id) : []);
+      })
+      .catch(() => showMsg("error", "Failed to load clubs or membership info."))
+      .finally(() => mounted && setLoading(false));
+
+    return () => { mounted = false; };
   }, []);
 
   const handleJoinRequest = async () => {
@@ -161,9 +172,19 @@ export default function CoachClubs() {
                   </div>
 
                   <div className="entity-card-action">
-                    <button className="btn-primary" style={{ width: "100%", justifyContent: "center" }} onClick={() => setSelectedClub(club)}>
-                      <UserPlus size={16} /> Request to Join
-                    </button>
+                    {joinedClubIds.includes(club._id) ? (
+                      <button
+                        className="btn-primary"
+                        style={{ width: "100%", justifyContent: "center", opacity: 0.65, cursor: "not-allowed" }}
+                        disabled
+                      >
+                        Already Joined
+                      </button>
+                    ) : (
+                      <button className="btn-primary" style={{ width: "100%", justifyContent: "center" }} onClick={() => setSelectedClub(club)}>
+                        <UserPlus size={16} /> Request to Join
+                      </button>
+                    )}
                   </div>
                 </div>
               );

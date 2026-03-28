@@ -53,7 +53,7 @@ export default function AthleteDashboard() {
   const latestRating = performanceRatings[0]?.overallScore ? Number(performanceRatings[0].overallScore).toFixed(1) : "--";
 
   const statCards = [
-    { icon: Building2, label: "Joined Clubs", value: joinedClubs, to: "/athlete/clubs", color: "#f97316" },
+    { icon: Building2, label: "Joined Clubs", value: joinedClubs, to: "/athlete/joined-clubs", color: "#f97316" },
     { icon: Send, label: "Pending Requests", value: pendingRequests, to: "/athlete/requests", color: "#f59e0b" },
     { icon: Trophy, label: "My Sports", value: mySports, to: "/athlete/profile", color: "#3b82f6" },
     { icon: CalendarClock, label: "Upcoming Events", value: upcomingEvents, to: "/athlete/events", color: "#10b981" },

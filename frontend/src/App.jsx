@@ -23,6 +23,7 @@ import AthleteLayout from "./pages/athlete/AthleteLayout";
 import AthleteDashboard from "./pages/athlete/AthleteDashboard";
 import AthleteProfile from "./pages/athlete/AthleteProfile";
 import AthleteClubs from "./pages/athlete/AthleteClubs";
+import AthleteJoinedClubs from "./pages/athlete/AthleteJoinedClubs";
 import AthleteRequests from "./pages/athlete/AthleteRequests";
 import AthleteTeams from "./pages/athlete/AthleteTeams";
 import AthletePlaygrounds from "./pages/athlete/AthletePlaygrounds";
@@ -40,6 +41,7 @@ import CoachLayout from "./pages/coach/CoachLayout";
 import CoachDashboard from "./pages/coach/CoachDashboard";
 import CoachProfile from "./pages/coach/CoachProfile";
 import CoachClubs from "./pages/coach/CoachClubs";
+import CoachJoinedClubs from "./pages/coach/CoachJoinedClubs";
 import CoachTeams from "./pages/coach/CoachTeams";
 import CoachRequests from "./pages/coach/CoachRequests";
 import CoachTraining from "./pages/coach/CoachTraining";
@@ -84,6 +86,7 @@ export default function App() {
           <Route path="dashboard" element={<AthleteDashboard />} />
           <Route path="profile" element={<AthleteProfile />} />
           <Route path="clubs" element={<AthleteClubs />} />
+          <Route path="joined-clubs" element={<AthleteJoinedClubs />} />
           <Route path="teams" element={<AthleteTeams />} />
           <Route path="requests" element={<AthleteRequests />} />
           <Route path="playgrounds" element={<AthletePlaygrounds />} />
@@ -102,6 +105,7 @@ export default function App() {
           <Route path="dashboard" element={<CoachDashboard />} />
           <Route path="profile" element={<CoachProfile />} />
           <Route path="clubs" element={<CoachClubs />} />
+          <Route path="joined-clubs" element={<CoachJoinedClubs />} />
           <Route path="teams" element={<CoachTeams />} />
           <Route path="requests" element={<CoachRequests />} />
           <Route path="training" element={<CoachTraining />} />

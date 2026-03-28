@@ -43,7 +43,7 @@ export default function CoachDashboard() {
   const yearsExperience = coach?.experience || 0;
 
   const statCards = [
-    { icon: Building2, label: "Joined Clubs", value: joinedClubsCount, to: "/coach/clubs", color: "#f97316" },
+    { icon: Building2, label: "Joined Clubs", value: joinedClubsCount, to: "/coach/joined-clubs", color: "#f97316" },
     { icon: Send, label: "Pending Requests", value: pendingCount, to: "/coach/requests", color: "#f59e0b" },
     { icon: Activity, label: "Years Experience", value: yearsExperience, to: "/coach/profile", color: "#3b82f6" },
     { icon: Users, label: "Teams", value: 0, to: "/coach/teams", color: "#10b981" },

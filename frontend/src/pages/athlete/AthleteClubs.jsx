@@ -27,6 +27,7 @@ function SkeletonClubCard() {
 
 export default function AthleteClubs() {
   const [clubs, setClubs] = useState([]);
+  const [joinedClubIds, setJoinedClubIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [msg, setMsg] = useState(null);
@@ -40,11 +41,21 @@ export default function AthleteClubs() {
   };
 
   useEffect(() => {
-    fetch(`${API}/api/club/all`)
-      .then((r) => r.json())
-      .then((data) => setClubs(Array.isArray(data) ? data : []))
-      .catch(() => showMsg("error", "Failed to load clubs. Please refresh."))
-      .finally(() => setLoading(false));
+    let mounted = true;
+
+    Promise.all([
+      fetch(`${API}/api/club/all`).then((r) => r.json()),
+      fetch(`${API}/api/athlete/me`, { credentials: "include" }).then((r) => r.json()),
+    ])
+      .then(([clubsData, athleteData]) => {
+        if (!mounted) return;
+        setClubs(Array.isArray(clubsData) ? clubsData : []);
+        setJoinedClubIds(Array.isArray(athleteData?.clubs) ? athleteData.clubs.map((club) => club._id) : []);
+      })
+      .catch(() => showMsg("error", "Failed to load clubs or membership info. Please refresh."))
+      .finally(() => mounted && setLoading(false));
+
+    return () => { mounted = false; };
   }, []);
 
   const handleJoinRequest = async () => {
@@ -194,13 +205,23 @@ export default function AthleteClubs() {
                       </p>
                     )}
 
-                    <button
-                      className="btn-primary"
-                      style={{ width: "100%", marginTop: "auto" }}
-                      onClick={() => setSelectedClub(club)}
-                    >
-                      <UserPlus size={15} /> Request to Join
-                    </button>
+                    {joinedClubIds.includes(club._id) ? (
+                      <button
+                        className="btn-primary"
+                        style={{ width: "100%", marginTop: "auto", opacity: 0.65, cursor: "not-allowed" }}
+                        disabled
+                      >
+                        Already Joined
+                      </button>
+                    ) : (
+                      <button
+                        className="btn-primary"
+                        style={{ width: "100%", marginTop: "auto" }}
+                        onClick={() => setSelectedClub(club)}
+                      >
+                        <UserPlus size={15} /> Request to Join
+                      </button>
+                    )}
                   </div>
                 );
               })}
