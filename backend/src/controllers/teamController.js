@@ -18,16 +18,27 @@ export const createTeam = async (req, res) => {
 
 export const addAthleteToTeam = async (req, res) => {
     try {
-        const { teamId, athleteId } = req.body;
+        const { teamId, athleteId, athleteIds } = req.body;
+        const ids = Array.isArray(athleteIds) ? athleteIds : athleteId ? [athleteId] : [];
+        if (!ids.length)
+            return res.status(400).json({ message: "No athlete IDs provided" });
         const team = await Team.findById(teamId);
         if (!team)
             return res.status(404).json({ message: "Team not found" });
-        const athlete = await Athlete.findOne({ user: athleteId });
-        if (!athlete)
-            return res.status(404).json({ message: "Athlete not found" });
-        if (team.athletes.includes(athleteId))
-            return res.status(400).json({ message: "Athlete already in team" });
-        team.athletes.push(athleteId);
+
+        const added = [];
+        for (const id of ids) {
+            if (team.athletes.includes(id)) continue;
+            const athlete = await Athlete.findOne({ user: id });
+            if (!athlete)
+                return res.status(404).json({ message: `Athlete not found: ${id}` });
+            team.athletes.push(id);
+            added.push(id);
+        }
+
+        if (!added.length)
+            return res.status(400).json({ message: "Selected athletes are already in the team" });
+
         await team.save();
         res.status(200).json(team);
     } catch (error) {
@@ -68,16 +79,27 @@ export const updateTeamName = async (req, res) => {
 
 export const addCoachToTeam = async (req, res) => {
     try {
-        const { teamId, coachId } = req.body;
+        const { teamId, coachId, coachIds } = req.body;
+        const ids = Array.isArray(coachIds) ? coachIds : coachId ? [coachId] : [];
+        if (!ids.length)
+            return res.status(400).json({ message: "No coach IDs provided" });
         const team = await Team.findById(teamId);
         if (!team)
             return res.status(404).json({ message: "Team not found" });
-        const coach = await Coach.findOne({ user: coachId });
-        if (!coach)
-            return res.status(404).json({ message: "Coach not found" });
-        if (team.coaches.includes(coachId))
-            return res.status(400).json({ message: "Coach already in team" });
-        team.coaches.push(coachId);
+
+        const added = [];
+        for (const id of ids) {
+            if (team.coaches.includes(id)) continue;
+            const coach = await Coach.findOne({ user: id });
+            if (!coach)
+                return res.status(404).json({ message: `Coach not found: ${id}` });
+            team.coaches.push(id);
+            added.push(id);
+        }
+
+        if (!added.length)
+            return res.status(400).json({ message: "Selected coaches are already in the team" });
+
         await team.save();
         res.status(200).json(team);
     } catch (error) {
