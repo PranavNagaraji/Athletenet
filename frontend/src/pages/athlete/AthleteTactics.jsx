@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  Crosshair, Loader2, Search, Filter,
+  Crosshair, Loader2, Search,
   MessageCircle, Calendar, User, ChevronRight, ShieldCheck, Sword
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import FormationsBoard from "../../components/FormationsBoard";
 import "../club/ClubLayout.css";
 
 const API = import.meta.env.VITE_BACKEND_URL;
@@ -168,6 +168,7 @@ function FormationCard({ formation, onClick }) {
 
 export default function AthleteTactics() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [formations, setFormations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sport, setSport] = useState("all");
@@ -175,51 +176,66 @@ export default function AthleteTactics() {
   const [openFormation, setOpenFormation] = useState(null);
 
   useEffect(() => {
-    // Load teams athlete belongs to, then load formations for each team
-    fetch(`${API}/api/athlete/me`, { credentials: "include" })
-      .then(r => r.json())
-      .then(async (d) => {
-        const joinedClubs = d.clubs || [];
+    if (!user?._id) return;
+    setLoading(true);
+
+    const fetchSharedFormations = async () => {
+      try {
+        const athleteRes = await fetch(`${API}/api/athlete/me`, { credentials: "include" });
+        const athleteData = await athleteRes.json();
+        const joinedClubs = athleteData.clubs || [];
+        const athleteId = user._id;
         let allTeamIds = [];
 
         await Promise.all(joinedClubs.map(async (club) => {
           const adminId = club.admin?._id || club.admin;
           if (!adminId) return;
           try {
-            const r = await fetch(`${API}/api/team/club/${adminId}`);
+            const r = await fetch(`${API}/api/team/club/${adminId}`, { credentials: "include" });
             const teams = await r.json();
-            if (Array.isArray(teams)) {
-              allTeamIds = [...allTeamIds, ...teams.map(t => t._id)];
-            }
-          } catch {}
+            if (!Array.isArray(teams)) return;
+            const athleteTeams = teams.filter((team) => {
+              return (team.athletes || []).some((member) => {
+                const memberId = member?._id || member;
+                return String(memberId) === String(athleteId);
+              });
+            });
+            allTeamIds.push(...athleteTeams.map((t) => t._id));
+          } catch {
+            return;
+          }
         }));
 
-        // De-duplicate
         allTeamIds = [...new Set(allTeamIds)];
 
-        // Fetch formations for each team
         const allFormations = [];
         await Promise.all(allTeamIds.map(async (teamId) => {
           try {
             const r = await fetch(`${API}/api/formations/team/${teamId}`, { credentials: "include" });
             const data = await r.json();
             if (Array.isArray(data)) allFormations.push(...data);
-          } catch {}
+          } catch {
+            return;
+          }
         }));
 
-        // De-duplicate formations by _id
         const seen = new Set();
-        const unique = allFormations.filter(f => {
+        const unique = allFormations.filter((f) => {
           if (seen.has(f._id)) return false;
           seen.add(f._id);
           return true;
         });
         unique.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setFormations(unique);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+      } catch {
+        setFormations([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSharedFormations();
+  }, [user]);
 
   // Refresh single formation comments after posting a comment
   const handleFormationUpdate = (formationId) => {

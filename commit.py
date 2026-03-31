@@ -2,7 +2,7 @@ import subprocess
 import os
 
 # Custom date (format: "YYYY-MM-DD HH:MM:SS")
-custom_date = "2026-03-30 22:23:00"
+custom_date = "2026-03-31 22:04:00"
 
 # Set environment variables for Git
 env = os.environ.copy()
@@ -14,6 +14,6 @@ subprocess.run(["git", "add", "."], env=env)
 
 # Commit with custom date
 subprocess.run(
-    ["git", "commit", "-m", "Created club invite function"],
+    ["git", "commit", "-m", "Fixed Tactics page"],
     env=env
 )
