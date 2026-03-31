@@ -17,7 +17,7 @@ export default function CoachLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
 
   useEffect(() => {
     if (window.innerWidth < 1025) {

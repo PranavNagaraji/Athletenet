@@ -29,7 +29,7 @@ export default function ClubLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [clubBranding, setClubBranding] = useState({ name: "", profilePic: "" });
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
 
   useEffect(() => {
     fetch(`${API}/api/club/profile`, { credentials: "include" })

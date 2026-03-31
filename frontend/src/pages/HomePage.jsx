@@ -12,16 +12,16 @@ export default function HomePage() {
         if (!user) { navigate("/login", { replace: true }); return; }
 
         const roleRoutes = {
-            club: "/club/feed",
-            athlete: "/athlete/feed",
-            coach: "/coach/profile",
+            club: "/club/dashboard",
+            athlete: "/athlete/dashboard",
+            coach: "/coach/dashboard",
         };
         navigate(roleRoutes[user.role] || "/login", { replace: true });
     }, [user, isLoading, navigate]);
 
     return (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "var(--theme-bg)", color: "var(--theme-muted)", fontFamily: "Inter,sans-serif" }}>
-            Redirecting...
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "var(--theme-bg)", color: "var(--theme-muted)", fontFamily: "var(--font-ui)" }}>
+            Redirecting to your dashboard...
         </div>
     );
 }

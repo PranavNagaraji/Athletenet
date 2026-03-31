@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Compass, Search, UserPlus, Loader2, X, AlertCircle, Send } from "lucide-react";
+import { AlertCircle, Compass, Loader2, Search, Send, UserPlus, X } from "lucide-react";
 import "../club/ClubLayout.css";
 
 const API = import.meta.env.VITE_BACKEND_URL;
@@ -9,18 +9,19 @@ export default function CoachClubs() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [msg, setMsg] = useState(null);
-  
-  // Join Request Modal
   const [selectedClub, setSelectedClub] = useState(null);
   const [requestMsg, setRequestMsg] = useState("");
   const [sending, setSending] = useState(false);
 
-  const showMsg = (type, text) => { setMsg({ type, text }); setTimeout(() => setMsg(null), 3000); };
+  const showMsg = (type, text) => {
+    setMsg({ type, text });
+    setTimeout(() => setMsg(null), 3000);
+  };
 
   useEffect(() => {
     fetch(`${API}/api/club/all`)
-      .then(r => r.json())
-      .then(d => setClubs(Array.isArray(d) ? d : []))
+      .then((response) => response.json())
+      .then((data) => setClubs(Array.isArray(data) ? data : []))
       .catch(() => showMsg("error", "Failed to load clubs"))
       .finally(() => setLoading(false));
   }, []);
@@ -30,116 +31,174 @@ export default function CoachClubs() {
     setSending(true);
     try {
       const res = await fetch(`${API}/api/join-request/request`, {
-        method: "POST", credentials: "include",
+        method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clubId: selectedClub._id, message: requestMsg })
+        body: JSON.stringify({ clubId: selectedClub._id, message: requestMsg }),
       });
       const data = await res.json();
-      if (res.ok) { showMsg("success", "Join request sent!"); setSelectedClub(null); setRequestMsg(""); }
-      else showMsg("error", data.message || "Failed to send request.");
-    } catch { showMsg("error", "Network error."); }
-    finally { setSending(false); }
+      if (res.ok) {
+        showMsg("success", "Join request sent.");
+        setSelectedClub(null);
+        setRequestMsg("");
+      } else {
+        showMsg("error", data.message || "Failed to send request.");
+      }
+    } catch {
+      showMsg("error", "Network error.");
+    } finally {
+      setSending(false);
+    }
   };
 
-  const filteredClubs = clubs.filter(c => 
-    c.admin?.name?.toLowerCase().includes(search.toLowerCase()) || 
-    c.specialization?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredClubs = clubs.filter((club) => {
+    const haystack = [
+      club.name,
+      club.admin?.name,
+      club.specialization,
+      ...(Array.isArray(club.facilities) ? club.facilities : []),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.includes(search.trim().toLowerCase());
+  });
 
   return (
     <div>
       <div className="page-header">
         <div className="page-header-left">
-          <h1>Browse Clubs (Coach)</h1>
-          <p>Find specialized sports clubs to lend your coaching expertise</p>
+          <h1>Browse Clubs</h1>
+          <p>Find clubs where your coaching profile, sport specialty, and leadership can create impact.</p>
         </div>
       </div>
 
-      <div className="page-body">
-        {msg && <div className={`alert alert-${msg.type}`}><AlertCircle size={15}/> {msg.text}</div>}
-        
-        <div className="card" style={{ marginBottom: "1.5rem" }}>
-          <div style={{ display:"flex", alignItems:"center", background:"var(--c-surface)", border:"1px solid var(--c-border)", borderRadius:8, padding:"0.6rem 1rem" }}>
-            <Search size={18} color="var(--c-muted)" style={{ marginRight:"0.8rem" }} />
-            <input 
-              type="text" placeholder="Search by club name or sport..." 
-              value={search} onChange={e => setSearch(e.target.value)}
-              style={{ background:"transparent", border:"none", color:"var(--c-text)", width:"100%", outline:"none", fontSize:"0.95rem" }}
-            />
+      <div className="page-body stack-lg">
+        {msg ? (
+          <div className={`alert alert-${msg.type}`}>
+            <AlertCircle size={15} /> {msg.text}
           </div>
+        ) : null}
+
+        <div className="search-shell">
+          <div className="search-shell-icon">
+            <Search size={18} />
+          </div>
+          <input
+            type="text"
+            className="search-shell-input"
+            placeholder="Search by club, sport, or facility..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+          {search ? (
+            <button type="button" className="search-shell-clear" onClick={() => setSearch("")} aria-label="Clear search">
+              <X size={14} />
+            </button>
+          ) : null}
         </div>
 
         {loading ? (
-          <div className="loading-state"><Loader2 size={24} className="spinner-icon"/> Loading clubs...</div>
+          <div className="loading-state">
+            <Loader2 size={24} className="spinner-icon" /> Loading clubs...
+          </div>
         ) : filteredClubs.length === 0 ? (
           <div className="empty-state">
             <Compass size={40} />
-            <p>No clubs found matching your search.</p>
+            <p>No clubs found for that search. Try another sport, facility, or club name.</p>
           </div>
         ) : (
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(280px, 1fr))", gap:"1.2rem" }}>
-            {filteredClubs.map(club => {
-              const pic = club.profilePic || club.admin?.profilePic;
+          <div className="entity-grid">
+            {filteredClubs.map((club) => {
+              const clubName = club.name || club.admin?.name || "Official Club";
+              const picture = club.profilePic || club.admin?.profilePic;
+              const specialization = club.specialization || "Multi-sport Club";
+              const facilities = Array.isArray(club.facilities) ? club.facilities.filter(Boolean) : [];
+              const setupLabel = club.establishedYear ? `Est. ${club.establishedYear}` : "Emerging program";
+
               return (
-               <div key={club._id} className="card" style={{ display:"flex", flexDirection:"column", padding:"1.2rem" }}>
-                <div style={{ display:"flex", alignItems:"center", gap:"1rem", marginBottom:"1rem" }}>
-                  <div style={{ width:48, height:48, borderRadius:"50%", background: pic ? "var(--theme-surface-2)" : "linear-gradient(135deg, var(--theme-primary), var(--theme-primary-dark))", border: "1px solid var(--theme-border)", display:"flex", alignItems:"center", justifyContent:"center", overflow: "hidden", flexShrink: 0 }}>
-                    {pic ? (
-                      <img src={`${API}${pic}`} style={{width:"100%",height:"100%",objectFit:"cover"}} />
-                    ) : (
-                      <span style={{ fontFamily: "var(--font-heading)", fontSize: "1.4rem", color: "#fff", fontWeight: 800 }}>
-                        {(club.name || club.admin?.name || "C").charAt(0).toUpperCase()}
-                      </span>
-                    )}
+                <div key={club._id} className="card entity-card" style={{ padding: "1.2rem" }}>
+                  <div className="entity-card-top">
+                    <div className="avatar-badge round">
+                      {picture ? (
+                        <img src={`${API}${picture}`} alt={clubName} />
+                      ) : (
+                        <span style={{ fontFamily: "var(--font-heading)", fontSize: "1.5rem", fontWeight: 800 }}>
+                          {clubName.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <h3>{clubName}</h3>
+                      <div className="entity-subtitle">
+                        {specialization} with room for stronger coaching structure, player development, and team culture.
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h3 style={{ margin:0, fontSize:"1.05rem", fontWeight:600 }}>{club.name || club.admin?.name || "Official Club"}</h3>
-                    <span style={{ fontSize:"0.8rem", color:"var(--c-primary)", background:"rgba(249,115,22,0.1)", padding:"0.1rem 0.5rem", borderRadius:100, display:"inline-block", marginTop:"0.2rem" }}>
-                      {club.specialization || "General Sports"}
-                    </span>
+
+                  <div className="detail-pills">
+                    <span className="pill pill-primary">{specialization}</span>
+                    <span className="meta-pill">{setupLabel}</span>
+                    <span className="meta-pill">{facilities.length} facilities</span>
+                    <span className="meta-pill">{club.admin?.name ? `Admin: ${club.admin.name}` : "Admin available"}</span>
                   </div>
+
+                  <div style={{ color: "var(--theme-muted)", lineHeight: 1.7, minHeight: 54 }}>
+                    {facilities.length > 0
+                      ? `Current facility stack: ${facilities.slice(0, 3).join(", ")}${facilities.length > 3 ? "..." : ""}`
+                      : "Facilities are not listed yet, but you can still reach out and position your coaching value."}
+                  </div>
+
+                  {facilities.length > 0 ? (
+                    <div className="detail-pills">
+                      {facilities.slice(0, 4).map((facility) => (
+                        <span key={facility} className="meta-pill">{facility}</span>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  <button className="btn-primary" style={{ width: "100%", justifyContent: "center", marginTop: "auto" }} onClick={() => setSelectedClub(club)}>
+                    <UserPlus size={16} /> Request to Join
+                  </button>
                 </div>
-                <div style={{ fontSize:"0.85rem", color:"var(--c-muted)", marginBottom:"1.2rem", flex:1 }}>
-                  Established: {club.establishedYear || "N/A"}<br/>
-                  Facilities: {(club.facilities || []).join(", ") || "None listed"}
-                </div>
-                <button className="btn-primary" style={{ width:"100%", justifyContent:"center" }} onClick={() => setSelectedClub(club)}>
-                  <UserPlus size={16}/> Request to Join
-                </button>
-              </div>
               );
             })}
           </div>
         )}
       </div>
 
-      {selectedClub && (
+      {selectedClub ? (
         <div className="modal-backdrop" onClick={() => setSelectedClub(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1rem" }}>
+          <div className="modal" onClick={(event) => event.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
               <div className="modal-title">Coach {selectedClub.name || selectedClub.admin?.name || "Club"}</div>
-              <button className="btn-ghost" style={{ padding:"0.3rem" }} onClick={() => setSelectedClub(null)}><X size={16}/></button>
+              <button className="btn-ghost" style={{ padding: "0.3rem" }} onClick={() => setSelectedClub(null)}>
+                <X size={16} />
+              </button>
             </div>
-            <p style={{ fontSize:"0.9rem", color:"var(--c-muted)", marginBottom:"1rem" }}>
-              Send a message to the club admin outlining your experience and how you can aid their athletes.
+            <p style={{ fontSize: "0.95rem", color: "var(--theme-muted)", marginBottom: "1rem", lineHeight: 1.7 }}>
+              Outline your experience, sport expertise, and how you would raise the training environment for their athletes.
             </p>
             <div className="field-group">
               <label className="field-label">Message</label>
-              <textarea 
-                className="field-input" rows="4" 
-                placeholder="Hello, I have 10 years of coaching experience in..."
-                value={requestMsg} onChange={e => setRequestMsg(e.target.value)}
+              <textarea
+                className="field-input"
+                rows="4"
+                placeholder="Hello, I have coached competitive youth and senior squads for several seasons and can support player progression through..."
+                value={requestMsg}
+                onChange={(event) => setRequestMsg(event.target.value)}
               />
             </div>
             <div className="modal-actions">
               <button className="btn-ghost" onClick={() => setSelectedClub(null)}>Cancel</button>
               <button className="btn-primary" onClick={handleJoinRequest} disabled={sending}>
-                {sending ? <Loader2 size={16} className="spinner-icon"/> : <Send size={16}/>} Send Request
+                {sending ? <Loader2 size={16} className="spinner-icon" /> : <Send size={16} />} Send Request
               </button>
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
