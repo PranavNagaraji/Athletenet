@@ -4,6 +4,9 @@ import { useAuth } from "../../context/AuthContext";
 import "./ClubLayout.css";
 
 const API = import.meta.env.VITE_BACKEND_URL;
+const glassCard = "var(--theme-surface-3)";
+const glassBorder = "1px solid var(--theme-border-soft)";
+const softPanel = "var(--theme-overlay-soft)";
 
 export default function ClubFeed() {
   const { user } = useAuth();
@@ -138,7 +141,7 @@ export default function ClubFeed() {
     <div style={{ maxWidth: 700, margin: "0 auto", paddingBottom: "3rem" }}>
       <div className="page-header" style={{ marginBottom: "2rem" }}>
          <div className="page-header-left">
-           <h1 style={{ background: "linear-gradient(90deg, #fff, #aaa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Club Spotlights</h1>
+           <h1 style={{ background: "var(--theme-hero-title)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Club Spotlights</h1>
            <p>Share news, player achievements, and events with the global network.</p>
          </div>
       </div>
@@ -147,9 +150,9 @@ export default function ClubFeed() {
       <div className="card" style={{ 
         marginBottom: "2.5rem", 
         padding: "1.5rem", 
-        background: "rgba(255,255,255,0.03)", 
+        background: glassCard, 
         borderRadius: "16px",
-        border: "1px solid rgba(255,255,255,0.05)"
+        border: glassBorder
       }}>
         <div style={{ display: "flex", gap: "1rem" }}>
           <div style={{ width: 50, height: 50, borderRadius: "50%", background: "var(--c-primary)", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -159,13 +162,13 @@ export default function ClubFeed() {
             <div style={{ marginBottom: "0.8rem", position: "relative" }}>
                <button 
                 onClick={() => setShowContextOptions(!showContextOptions)}
-                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--c-border)", borderRadius: "20px", padding: "0.3rem 0.8rem", color: "var(--c-muted)", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer" }}>
+                style={{ background: "var(--theme-surface-4)", border: "1px solid var(--c-border)", borderRadius: "20px", padding: "0.3rem 0.8rem", color: "var(--c-muted)", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer" }}>
                   {postContext.type === "club" ? <Shield size={12}/> : <UsersIcon size={12}/>}
                   Posting as: <span style={{ color: "var(--c-primary)", fontWeight: 600 }}>{postContext.name}</span>
                </button>
                
                {showContextOptions && (
-                 <div className="card" style={{ position: "absolute", top: "110%", left: 0, zIndex: 10, minWidth: 220, padding: "0.5rem", boxShadow: "0 10px 25px rgba(0,0,0,0.5)" }}>
+                 <div className="card" style={{ position: "absolute", top: "110%", left: 0, zIndex: 10, minWidth: 220, padding: "0.5rem", boxShadow: "var(--theme-shadow)" }}>
                     <div onClick={() => { setPostContext({ type: "club", id: myClub?._id, name: myClub?.name }); setShowContextOptions(false); }} style={{ padding: "0.5rem", cursor: "pointer", borderRadius: 4, display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem" }}>
                        <Shield size={14}/> {myClub?.name} (Official Club)
                     </div>
@@ -181,14 +184,14 @@ export default function ClubFeed() {
             <textarea 
               placeholder="What's the latest from the club?"
               value={content} onChange={e => setContent(e.target.value)}
-              style={{ width: "100%", background: "transparent", border: "none", color: "white", outline: "none", resize: "none", fontSize: "1.1rem", minHeight: 90 }}
+              style={{ width: "100%", background: "transparent", border: "none", color: "var(--c-text)", outline: "none", resize: "none", fontSize: "1.1rem", minHeight: 90 }}
             />
             {preview && (
               <div style={{ position: "relative", marginTop: "1rem", borderRadius: 12, overflow: "hidden", maxHeight: 400, border: "1px solid var(--c-border)" }}>
                 <img src={preview} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 <button 
                   onClick={() => { setFile(null); setPreview(null); }}
-                  style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,0.7)", color: "white", border: "none", borderRadius: "50%", width: 32, height: 32, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                  style={{ position: "absolute", top: 10, right: 10, background: "var(--theme-overlay)", color: "var(--theme-on-primary)", border: "none", borderRadius: "50%", width: 32, height: 32, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                 >
                   &times;
                 </button>
@@ -196,7 +199,7 @@ export default function ClubFeed() {
             )}
           </div>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid var(--theme-border-soft)" }}>
            <div style={{ display: "flex", gap: "1rem" }}>
               <button className="btn-ghost" onClick={() => fileInputRef.current.click()} style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--c-muted)", fontSize: "0.9rem" }}>
                   <ImageIcon size={20} color="var(--c-primary)" /> Add Media
@@ -225,8 +228,8 @@ export default function ClubFeed() {
               padding: 0, 
               overflow: "hidden", 
               borderRadius: "16px",
-              background: "rgba(255,255,255,0.02)",
-              border: post.recommended ? "1px solid rgba(0,180,255,0.2)" : "1px solid rgba(255,255,255,0.05)"
+              background: "var(--theme-surface-3)",
+              border: post.recommended ? "1px solid rgba(0,180,255,0.2)" : glassBorder
             }}>
               <div style={{ display: "flex", gap: "0.5rem", padding: "0.8rem 1.2rem 0", flexWrap: "wrap" }}>
                   {post.recommended && (
@@ -235,12 +238,12 @@ export default function ClubFeed() {
                     </div>
                   )}
                   {post.team && (
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", background: "rgba(255,255,255,0.05)", color: "var(--c-primary)", padding: "0.2rem 0.6rem", borderRadius: "12px", fontSize: "0.65rem", fontWeight: 600 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", background: "var(--theme-surface-4)", color: "var(--c-primary)", padding: "0.2rem 0.6rem", borderRadius: "12px", fontSize: "0.65rem", fontWeight: 600 }}>
                        Team: {post.team.name}
                     </div>
                   )}
                   {post.club && !post.team && (
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", background: "rgba(255,255,255,0.05)", color: "#ffcc00", padding: "0.2rem 0.6rem", borderRadius: "12px", fontSize: "0.65rem", fontWeight: 600 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", background: "var(--theme-surface-4)", color: "var(--theme-gold)", padding: "0.2rem 0.6rem", borderRadius: "12px", fontSize: "0.65rem", fontWeight: 600 }}>
                        Club: {post.club.name}
                     </div>
                   )}
@@ -258,17 +261,17 @@ export default function ClubFeed() {
                 </div>
               </div>
 
-              <div style={{ padding: "0 1.2rem 1.2rem", fontSize: "1rem", lineHeight: 1.6, color: "#eee" }}>
+              <div style={{ padding: "0 1.2rem 1.2rem", fontSize: "1rem", lineHeight: 1.6, color: "var(--theme-text-soft)" }}>
                 {post.content}
               </div>
 
               {post.mediaUrl && (
-                <div style={{ width: "100%", background: "rgba(0,0,0,0.2)", minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: "100%", background: softPanel, minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <img src={`${API}${post.mediaUrl}`} style={{ width: "100%", height: "auto", maxHeight: 600, objectFit: "contain" }} alt="post" />
                 </div>
               )}
 
-              <div style={{ padding: "0.7rem 1.2rem", borderTop: "1px solid rgba(255,255,255,0.03)", display: "flex", gap: "1.2rem" }}>
+              <div style={{ padding: "0.7rem 1.2rem", borderTop: "1px solid var(--theme-border-soft)", display: "flex", gap: "1.2rem" }}>
                 <button 
                   onClick={() => handleLike(post._id)}
                   style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "none", border: "none", color: post.likes?.includes(user._id) ? "#ff4081" : "var(--c-muted)", cursor: "pointer" }}
@@ -286,23 +289,23 @@ export default function ClubFeed() {
               </div>
 
               {commentingOn === post._id && post.comments?.length > 0 && (
-                <div style={{ padding: "0.8rem 1.2rem", background: "rgba(255,255,255,0.01)", borderTop: "1px solid rgba(255,255,255,0.03)" }}>
+                <div style={{ padding: "0.8rem 1.2rem", background: "var(--theme-surface-3)", borderTop: "1px solid var(--theme-border-soft)" }}>
                    {post.comments.map((comm, idx) => (
                      <div key={idx} style={{ padding: "0.4rem 0", fontSize: "0.85rem", display: "flex", gap: "0.6rem" }}>
                         <span style={{ fontWeight: 700, color: "var(--c-primary)" }}>{comm.user?.name}</span>
-                        <span style={{ color: "#bbb" }}>{comm.text}</span>
+                        <span style={{ color: "var(--theme-text-soft)" }}>{comm.text}</span>
                      </div>
                    ))}
                 </div>
               )}
 
               {commentingOn === post._id && (
-                <div style={{ padding: "1rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", gap: "0.8rem" }}>
+                <div style={{ padding: "1rem", borderTop: "1px solid var(--theme-border-soft)", display: "flex", gap: "0.8rem", background: softPanel }}>
                    <input 
                     type="text" placeholder="Add a comment..." 
                     value={commentText} onChange={e => setCommentText(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && handleComment(post._id)}
-                    style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid var(--c-border)", borderRadius: "20px", padding: "0.5rem 1rem", color: "white", outline: "none" }}
+                    style={{ flex: 1, background: "var(--theme-surface-4)", border: "1px solid var(--c-border)", borderRadius: "20px", padding: "0.5rem 1rem", color: "var(--c-text)", outline: "none" }}
                    />
                    <button onClick={() => handleComment(post._id)} className="btn-primary" style={{ padding: "0.5rem 1.2rem", borderRadius: "20px" }}>Post</button>
                 </div>

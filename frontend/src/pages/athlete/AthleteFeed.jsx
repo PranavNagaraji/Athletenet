@@ -4,6 +4,9 @@ import { useAuth } from "../../context/AuthContext";
 import "../club/ClubLayout.css";
 
 const API = import.meta.env.VITE_BACKEND_URL;
+const glassCard = "var(--theme-surface-3)";
+const glassBorder = "1px solid var(--theme-border-soft)";
+const softPanel = "var(--theme-overlay-soft)";
 
 export default function AthleteFeed() {
   const { user } = useAuth();
@@ -138,19 +141,17 @@ export default function AthleteFeed() {
   return (
     <div style={{ maxWidth: 700, margin: "0 auto", paddingBottom: "3rem" }}>
       <div className="page-header" style={{ marginBottom: "2rem" }}>
-        <h1 style={{ background: "linear-gradient(90deg, #fff, #aaa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Network Discovery</h1>
-        <p>A smart feed tailored to your teams and performance.</p>
       </div>
 
       {/* Create Post Card - Premium Look */}
       <div className="card" style={{ 
         marginBottom: "2.5rem", 
         padding: "1.5rem", 
-        background: "rgba(255,255,255,0.03)", 
+        background: glassCard, 
         backdropFilter: "blur(10px)", 
-        border: "1px solid rgba(255,255,255,0.05)",
+        border: glassBorder,
         borderRadius: "16px",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.2)"
+        boxShadow: "var(--theme-shadow)"
       }}>
         <div style={{ display: "flex", gap: "1rem" }}>
           <div style={{ width: 50, height: 50, borderRadius: "50%", background: "var(--c-surface2)", overflow: "hidden", border: "2px solid var(--c-primary)" }}>
@@ -161,13 +162,13 @@ export default function AthleteFeed() {
             <div style={{ marginBottom: "0.8rem", position: "relative" }}>
                <button 
                 onClick={() => setShowContextOptions(!showContextOptions)}
-                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--c-border)", borderRadius: "20px", padding: "0.3rem 0.8rem", color: "var(--c-muted)", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer" }}>
+                style={{ background: "var(--theme-surface-4)", border: "1px solid var(--c-border)", borderRadius: "20px", padding: "0.3rem 0.8rem", color: "var(--c-muted)", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer" }}>
                   {postContext.type === "global" ? <Globe size={12}/> : postContext.type === "club" ? <Shield size={12}/> : <UsersIcon size={12}/>}
                   Posting to: <span style={{ color: "var(--c-primary)", fontWeight: 600 }}>{postContext.name}</span>
                </button>
                
                {showContextOptions && (
-                 <div className="card" style={{ position: "absolute", top: "110%", left: 0, zIndex: 10, minWidth: 200, padding: "0.5rem", boxShadow: "0 10px 25px rgba(0,0,0,0.5)" }}>
+                 <div className="card" style={{ position: "absolute", top: "110%", left: 0, zIndex: 10, minWidth: 200, padding: "0.5rem", boxShadow: "var(--theme-shadow)" }}>
                     <div onClick={() => { setPostContext({ type: "global", id: null, name: "Global Feed" }); setShowContextOptions(false); }} style={{ padding: "0.5rem", cursor: "pointer", borderRadius: 4, display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem" }}>
                        <Globe size={14}/> Global
                     </div>
@@ -188,14 +189,14 @@ export default function AthleteFeed() {
             <textarea 
               placeholder="What's happening on the field?"
               value={content} onChange={e => setContent(e.target.value)}
-              style={{ width: "100%", background: "transparent", border: "none", color: "white", outline: "none", resize: "none", fontSize: "1.1rem", minHeight: 90 }}
+              style={{ width: "100%", background: "transparent", border: "none", color: "var(--c-text)", outline: "none", resize: "none", fontSize: "1.1rem", minHeight: 90 }}
             />
             {preview && (
               <div style={{ position: "relative", marginTop: "1rem", borderRadius: 12, overflow: "hidden", maxHeight: 400, border: "1px solid var(--c-border)" }}>
                 <img src={preview} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 <button 
                   onClick={() => { setFile(null); setPreview(null); }}
-                  style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,0.7)", color: "white", border: "none", borderRadius: "50%", width: 32, height: 32, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                  style={{ position: "absolute", top: 10, right: 10, background: "var(--theme-overlay)", color: "var(--theme-on-primary)", border: "none", borderRadius: "50%", width: 32, height: 32, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                 >
                   &times;
                 </button>
@@ -203,7 +204,7 @@ export default function AthleteFeed() {
             )}
           </div>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid var(--theme-border-soft)" }}>
            <div style={{ display: "flex", gap: "1rem" }}>
               <button className="btn-ghost" onClick={() => fileInputRef.current.click()} style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--c-muted)", fontSize: "0.9rem" }}>
                   <ImageIcon size={20} color="var(--c-primary)" /> Photo / Video
@@ -220,7 +221,7 @@ export default function AthleteFeed() {
       {loading ? (
         <div className="loading-state" style={{ marginTop: "4rem" }}><Loader2 size={36} className="spinner-icon" /> <span style={{ color: "var(--c-muted)" }}>Ranking feed by relevance...</span></div>
       ) : posts.length === 0 ? (
-        <div className="empty-state" style={{ background: "rgba(255,255,255,0.01)", borderRadius: "16px", padding: "4rem 2rem" }}>
+        <div className="empty-state" style={{ background: "var(--theme-surface-3)", borderRadius: "16px", padding: "4rem 2rem" }}>
           <MessageSquare size={50} style={{ opacity: 0.3, marginBottom: "1rem" }} />
           <h3>All quiet on the field</h3>
           <p>Be the first to share an update with your community!</p>
@@ -232,8 +233,8 @@ export default function AthleteFeed() {
               padding: 0, 
               overflow: "hidden", 
               borderRadius: "16px",
-              background: "rgba(255,255,255,0.02)",
-              border: post.recommended ? "1px solid rgba(0,180,255,0.2)" : "1px solid rgba(255,255,255,0.05)",
+              background: "var(--theme-surface-3)",
+              border: post.recommended ? "1px solid rgba(0,180,255,0.2)" : glassBorder,
               transition: "transform 0.3s ease",
               cursor: "default"
             }}>
@@ -250,12 +251,12 @@ export default function AthleteFeed() {
                     </div>
                   )}
                   {post.team && (
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", background: "rgba(255,255,255,0.05)", color: "var(--c-primary)", padding: "0.2rem 0.6rem", borderRadius: "12px", fontSize: "0.65rem", fontWeight: 600 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", background: "var(--theme-surface-4)", color: "var(--c-primary)", padding: "0.2rem 0.6rem", borderRadius: "12px", fontSize: "0.65rem", fontWeight: 600 }}>
                        Team: {post.team.name}
                     </div>
                   )}
                   {post.club && !post.team && (
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", background: "rgba(255,255,255,0.05)", color: "#ffcc00", padding: "0.2rem 0.6rem", borderRadius: "12px", fontSize: "0.65rem", fontWeight: 600 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", background: "var(--theme-surface-4)", color: "var(--theme-gold)", padding: "0.2rem 0.6rem", borderRadius: "12px", fontSize: "0.65rem", fontWeight: 600 }}>
                        Club: {post.club.name}
                     </div>
                   )}
@@ -275,19 +276,19 @@ export default function AthleteFeed() {
               </div>
 
               {/* Content */}
-              <div style={{ padding: "0 1.2rem 1.2rem", fontSize: "1rem", lineHeight: 1.6, color: "#eee" }}>
+              <div style={{ padding: "0 1.2rem 1.2rem", fontSize: "1rem", lineHeight: 1.6, color: "var(--theme-text-soft)" }}>
                 {post.content}
               </div>
 
               {/* Media with sophisticated display */}
               {post.mediaUrl && (
-                <div style={{ width: "100%", background: "rgba(0,0,0,0.2)", minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center", borderTop: "1px solid rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
+                <div style={{ width: "100%", background: softPanel, minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center", borderTop: "1px solid var(--theme-border-soft)", borderBottom: "1px solid var(--theme-border-soft)" }}>
                   <img src={`${API}${post.mediaUrl}`} style={{ width: "100%", height: "auto", maxHeight: 600, objectFit: "contain" }} alt="post media" />
                 </div>
               )}
 
               {/* Interaction Bar */}
-              <div style={{ padding: "0.7rem 1.2rem", borderTop: "1px solid rgba(255,255,255,0.03)", display: "flex", justifyContent: "space-between" }}>
+              <div style={{ padding: "0.7rem 1.2rem", borderTop: "1px solid var(--theme-border-soft)", display: "flex", justifyContent: "space-between" }}>
                  <div style={{ display: "flex", gap: "1.2rem" }}>
                     <button 
                       onClick={() => handleLike(post._id)}
@@ -315,7 +316,7 @@ export default function AthleteFeed() {
 
               {/* Rich Comment Display - Only show when expanded */}
               {commentingOn === post._id && post.comments?.length > 0 && (
-                <div style={{ padding: "0.8rem 1.2rem", background: "rgba(255,255,255,0.01)", borderTop: "1px solid rgba(255,255,255,0.03)" }}>
+                <div style={{ padding: "0.8rem 1.2rem", background: "var(--theme-surface-3)", borderTop: "1px solid var(--theme-border-soft)" }}>
                    {post.comments.map((comm, idx) => (
                      <div key={idx} style={{ padding: "0.5rem 0", fontSize: "0.85rem", display: "flex", gap: "0.7rem", alignItems: "flex-start" }}>
                         <div style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--c-surface2)", overflow: "hidden", marginTop: 2 }}>
@@ -323,7 +324,7 @@ export default function AthleteFeed() {
                         </div>
                         <div style={{ flex: 1 }}>
                            <span style={{ fontWeight: 700, marginRight: "0.5rem", color: "var(--c-primary)" }}>{comm.user?.name}</span>
-                           <span style={{ color: "#bbb" }}>{comm.text}</span>
+                           <span style={{ color: "var(--theme-text-soft)" }}>{comm.text}</span>
                         </div>
                      </div>
                    ))}
@@ -332,13 +333,13 @@ export default function AthleteFeed() {
 
               {/* Expandable Add Comment Area */}
               {commentingOn === post._id && (
-                <div style={{ padding: "1.2rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", gap: "0.8rem", background: "rgba(0,0,0,0.1)" }}>
+                <div style={{ padding: "1.2rem", borderTop: "1px solid var(--theme-border-soft)", display: "flex", gap: "0.8rem", background: softPanel }}>
                    <input 
                     type="text" placeholder="Share your thoughts..." 
                     autoFocus
                     value={commentText} onChange={e => setCommentText(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && handleComment(post._id)}
-                    style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid var(--c-border)", borderRadius: "24px", padding: "0.6rem 1.2rem", color: "white", outline: "none", fontSize: "0.9rem" }}
+                    style={{ flex: 1, background: "var(--theme-surface-4)", border: "1px solid var(--c-border)", borderRadius: "24px", padding: "0.6rem 1.2rem", color: "var(--c-text)", outline: "none", fontSize: "0.9rem" }}
                    />
                    <button 
                     className="btn-primary" 

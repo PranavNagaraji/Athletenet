@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Compass, Search, Building2, UserPlus, Loader2, X, AlertCircle, Send } from "lucide-react";
+import { Compass, Search, UserPlus, Loader2, X, AlertCircle, Send } from "lucide-react";
 import "../club/ClubLayout.css";
 
 const API = import.meta.env.VITE_BACKEND_URL;
@@ -78,11 +78,19 @@ export default function CoachClubs() {
           </div>
         ) : (
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(280px, 1fr))", gap:"1.2rem" }}>
-            {filteredClubs.map(club => (
+            {filteredClubs.map(club => {
+              const pic = club.profilePic || club.admin?.profilePic;
+              return (
                <div key={club._id} className="card" style={{ display:"flex", flexDirection:"column", padding:"1.2rem" }}>
                 <div style={{ display:"flex", alignItems:"center", gap:"1rem", marginBottom:"1rem" }}>
-                  <div style={{ width:48, height:48, borderRadius:"50%", background:"var(--c-surface2)", border: "1px solid var(--c-border)", display:"flex", alignItems:"center", justifyContent:"center", overflow: "hidden" }}>
-                    {club.profilePic ? <img src={`${API}${club.profilePic}`} style={{width:"100%",height:"100%",objectFit:"cover"}} /> : <Building2 size={24} color="var(--c-muted)"/>}
+                  <div style={{ width:48, height:48, borderRadius:"50%", background: pic ? "var(--theme-surface-2)" : "linear-gradient(135deg, var(--theme-primary), var(--theme-primary-dark))", border: "1px solid var(--theme-border)", display:"flex", alignItems:"center", justifyContent:"center", overflow: "hidden", flexShrink: 0 }}>
+                    {pic ? (
+                      <img src={`${API}${pic}`} style={{width:"100%",height:"100%",objectFit:"cover"}} />
+                    ) : (
+                      <span style={{ fontFamily: "var(--font-heading)", fontSize: "1.4rem", color: "#fff", fontWeight: 800 }}>
+                        {(club.name || club.admin?.name || "C").charAt(0).toUpperCase()}
+                      </span>
+                    )}
                   </div>
                   <div>
                     <h3 style={{ margin:0, fontSize:"1.05rem", fontWeight:600 }}>{club.name || club.admin?.name || "Official Club"}</h3>
@@ -99,7 +107,8 @@ export default function CoachClubs() {
                   <UserPlus size={16}/> Request to Join
                 </button>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

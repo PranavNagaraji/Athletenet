@@ -1,2 +1,170 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #0a0a0f; overflow-x: hidden; }
+html {
+  color-scheme: dark;
+}
+
+:root,
+html[data-theme="dark"],
+body[data-theme="dark"] {
+  --theme-primary: #f97316;
+  --theme-primary-dark: #c2410c;
+  --theme-accent: #38bdf8;
+  --theme-bg: #09090b; /* Deep stark black/charcoal */
+  --theme-surface: #18181b; /* Solid dark grey */
+  --theme-surface-2: #27272a;
+  --theme-surface-3: #3f3f46;
+  --theme-border: #27272a;
+  --theme-border-soft: #18181b;
+  --theme-border-strong: #52525b;
+  --theme-text: #fafafa;
+  --theme-text-soft: #e4e4e7;
+  --theme-muted: #a1a1aa;
+  --theme-overlay: rgba(9, 9, 11, 0.95);
+  --theme-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  --theme-on-primary: #ffffff;
+  --theme-danger: #ef4444;
+  --theme-success: #10b981;
+}
+
+html[data-theme="light"],
+body[data-theme="light"] {
+  color-scheme: light;
+  --theme-primary: #ea580c;
+  --theme-primary-dark: #c2410c;
+  --theme-accent: #0284c7;
+  --theme-bg: #f8fafc; /* Crisp cool white */
+  --theme-surface: #ffffff;
+  --theme-surface-2: #f1f5f9;
+  --theme-surface-3: #e2e8f0;
+  --theme-border: #e2e8f0;
+  --theme-border-soft: #f1f5f9;
+  --theme-border-strong: #cbd5e1;
+  --theme-text: #0f172a;
+  --theme-text-soft: #1e293b;
+  --theme-muted: #64748b;
+  --theme-overlay: rgba(248, 250, 252, 0.95);
+  --theme-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --theme-on-primary: #ffffff;
+  --theme-danger: #dc2626;
+  --theme-success: #059669;
+}
+
+body {
+  background: var(--theme-bg);
+  color: var(--theme-text);
+  font-family: 'Inter', sans-serif;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, .font-heading {
+  font-family: 'Bebas Neue', 'Inter', sans-serif;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Base Animation Utilities */
+.animate-slide-up {
+  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.animate-slide-right {
+  animation: slideRightFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+
+@keyframes slideUpFade {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideRightFade {
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Layout Utilities */
+.solid-card {
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 16px;
+  box-shadow: var(--theme-shadow);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.solid-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+  border-color: var(--theme-border-strong);
+}
+
+.btn-primary {
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
+  border: none;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(249,115,22,0.3);
+}
+
+.btn-primary:hover {
+  background: var(--theme-primary-dark);
+  transform: scale(1.02) translateY(-2px);
+  box-shadow: 0 8px 24px rgba(249,115,22,0.4);
+}
+
+.btn-primary:active {
+  transform: scale(0.98) translateY(0);
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--theme-surface-2);
+  border: 1px solid var(--theme-border-strong);
+  color: var(--theme-text);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.theme-toggle:hover {
+  background: var(--theme-surface-3);
+  transform: scale(1.05);
+}
+.theme-toggle-compact {
+  width: 36px;
+  height: 36px;
+}

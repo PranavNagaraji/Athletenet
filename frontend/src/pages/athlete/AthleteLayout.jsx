@@ -1,46 +1,77 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, UserRound, Compass, Send, LogOut, ChevronRight, Activity, Users, MessageSquare, MapPin, CalendarClock, Trophy } from "lucide-react";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { LayoutDashboard, UserRound, Compass, Send, LogOut, ChevronRight, Activity, MessageSquare, MapPin, CalendarClock, Trophy, Menu, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import ThemeToggle from "../../components/ThemeToggle";
 import "../club/ClubLayout.css";
 
 const navItems = [
-  { to: "/athlete/dashboard", icon: LayoutDashboard, label: "Dashboard"      },
-  { to: "/athlete/feed",      icon: Activity,        label: "Social Feed"    },
-  { to: "/athlete/tournaments",icon: Trophy,          label: "Tournaments"    },
-  { to: "/athlete/profile",   icon: UserRound,       label: "My Profile"     },
-  { to: "/athlete/clubs",     icon: Compass,         label: "Browse Clubs"   },
-  { to: "/athlete/teams",     icon: MessageSquare,   label: "Messenger & Teams" },
-  { to: "/athlete/requests",   icon: Send,            label: "My Requests"    },
-  { to: "/athlete/playgrounds",icon: MapPin,          label: "Book Turf"      },
-  { to: "/athlete/bookings",   icon: CalendarClock,   label: "My Bookings"    },
+  { to: "/athlete/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/athlete/feed", icon: Activity, label: "Social Feed" },
+  { to: "/athlete/profile", icon: UserRound, label: "My Profile" },
+  { to: "/athlete/tournaments", icon: Trophy, label: "Tournaments" },
+  { to: "/athlete/clubs", icon: Compass, label: "Browse Clubs" },
+  { to: "/athlete/teams", icon: MessageSquare, label: "Messenger & Teams" },
+  { to: "/athlete/requests", icon: Send, label: "My Requests" },
+  { to: "/athlete/playgrounds", icon: MapPin, label: "Book Turf" },
+  { to: "/athlete/bookings", icon: CalendarClock, label: "My Bookings" },
 ];
 
 export default function AthleteLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Desktop is open by default, mobile is closed
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
+
+  useEffect(() => {
+    if (window.innerWidth <= 1024) setIsSidebarOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     await logout();
     navigate("/login", { replace: true });
   };
 
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
   return (
-    <div className="club-shell">
-      {/* ── Sidebar ── */}
+    <div className={`club-shell ${isSidebarOpen ? "sidebar-open" : ""}`}>
+      {/* Mobile Top Navbar */}
+      <div className="mobile-topbar animate-slide-up stagger-1">
+        <div className="mobile-topbar-left">
+          <button className="mobile-menu-btn" onClick={toggleSidebar}>
+            <Menu size={24} />
+          </button>
+          <span className="mobile-logo-text">AthleteNet</span>
+        </div>
+        <ThemeToggle compact />
+      </div>
+
+      {/* Overlay for mobile sidebar */}
+      <div className="sidebar-overlay" onClick={toggleSidebar}></div>
+
+      {/* Sidebar */}
       <aside className="club-sidebar">
         <div className="sidebar-logo">
-          <span className="logo-icon"><Activity size={22} /></span>
-          <span className="logo-text">AthleteNet</span>
+          <div className="sidebar-logo-row">
+            <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+              <span className="logo-icon"><Activity size={24} /></span>
+              <span className="logo-text">AthleteNet</span>
+            </div>
+            <button className="mobile-close-btn" onClick={toggleSidebar}>
+              <X size={24} />
+            </button>
+            <div className="hidden lg:block ml-auto"><ThemeToggle compact /></div>
+          </div>
         </div>
 
         <nav className="sidebar-nav">
           {navItems.map(({ to, icon: Icon, label }) => (
-            <NavLink key={to} to={to} className={({ isActive }) =>
-              `sidebar-link ${isActive ? "active" : ""}`
-            }>
-              <Icon size={18} />
+            <NavLink key={to} to={to} className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
+              <Icon size={20} />
               <span>{label}</span>
-              <ChevronRight size={14} className="link-arrow" />
+              <ChevronRight size={16} className="link-arrow" />
             </NavLink>
           ))}
         </nav>
@@ -49,7 +80,7 @@ export default function AthleteLayout() {
           <div className="sidebar-user">
             <div className="user-avatar" style={{ overflow: "hidden" }}>
               {user?.profilePic ? (
-                <img src={`${import.meta.env.VITE_BACKEND_URL}${user.profilePic}`} alt="avatar" style={{width:"100%", height:"100%", objectFit:"cover"}} />
+                <img src={`${import.meta.env.VITE_BACKEND_URL}${user.profilePic}`} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
               ) : (
                 user?.name?.[0]?.toUpperCase() || "A"
               )}
@@ -60,14 +91,16 @@ export default function AthleteLayout() {
             </div>
           </div>
           <button className="logout-btn" onClick={handleLogout} title="Logout">
-            <LogOut size={18} />
+            <LogOut size={20} />
           </button>
         </div>
       </aside>
 
-      {/* ── Main content ── */}
+      {/* Main Content Area */}
       <main className="club-main">
-        <Outlet />
+        <div className="animate-slide-up stagger-2" style={{ minHeight: "100%" }}>
+          <Outlet />
+        </div>
       </main>
     </div>
   );

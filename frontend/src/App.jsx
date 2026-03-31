@@ -55,7 +55,7 @@ export default function App() {
 
         {/* Club dashboard – nested under sidebar layout */}
         <Route path="/club" element={<ClubLayout />}>
-          <Route index element={<Navigate to="/club/dashboard" replace />} />
+          <Route index element={<Navigate to="/club/feed" replace />} />
           <Route path="dashboard"    element={<ClubDashboard    />} />
           <Route path="profile"      element={<ClubProfile      />} />
           <Route path="members"      element={<ClubMembers      />} />
@@ -71,7 +71,7 @@ export default function App() {
 
         {/* Athlete dashboard – nested under sidebar layout */}
         <Route path="/athlete" element={<AthleteLayout />}>
-          <Route index element={<Navigate to="/athlete/dashboard" replace />} />
+          <Route index element={<Navigate to="/athlete/feed" replace />} />
           <Route path="dashboard" element={<AthleteDashboard />} />
           <Route path="profile"   element={<AthleteProfile   />} />
           <Route path="clubs"       element={<AthleteClubs       />} />
@@ -85,7 +85,7 @@ export default function App() {
 
         {/* Coach dashboard – nested under sidebar layout */}
         <Route path="/coach" element={<CoachLayout />}>
-          <Route index element={<Navigate to="/coach/dashboard" replace />} />
+          <Route index element={<Navigate to="/coach/profile" replace />} />
           <Route path="dashboard" element={<CoachDashboard />} />
           <Route path="profile"   element={<CoachProfile   />} />
           <Route path="clubs"     element={<CoachClubs     />} />

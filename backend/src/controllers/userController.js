@@ -12,13 +12,16 @@ export const getAllUsers = async (req, res) => {
 export const updateProfile = async (req, res) => {
     try {
         const userId = req.user._id;
-        const { name, profilePic } = req.body;
+        const { name, profilePic, bio, sports, location } = req.body;
         
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: "User not found" });
 
         if (name) user.name = name;
         if (profilePic !== undefined) user.profilePic = profilePic;
+        if (bio !== undefined) user.bio = bio;
+        if (sports !== undefined) user.sports = sports;
+        if (location !== undefined) user.location = location;
 
         await user.save();
         res.status(200).json(user);
