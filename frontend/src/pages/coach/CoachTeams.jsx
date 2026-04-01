@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Users, UserPlus, Loader2, Trophy, MessageSquare, Send, Paperclip, FileText, Image as ImageIcon, MapPin, Crosshair } from "lucide-react";
+import { Users, UserPlus, Loader2, Trophy, MessageSquare, Send, Paperclip, FileText, Image as ImageIcon, MapPin, Crosshair, ChevronLeft } from "lucide-react";
 import { io } from "socket.io-client";
 import { useAuth } from "../../context/AuthContext";
 import { VALIDATION_LIMITS, validateFile } from "../../utils/formValidation";
@@ -107,6 +107,7 @@ export default function CoachTeams() {
   const [socket, setSocket] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [showTeamMemberList, setShowTeamMemberList] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(null);
   const [coachUserId, setCoachUserId] = useState(null);
   const [showTacticsBoard, setShowTacticsBoard] = useState(false);
@@ -193,6 +194,12 @@ export default function CoachTeams() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  useEffect(() => {
+    if (activeView?.type !== "team_chat") {
+      setShowTeamMemberList(false);
+    }
+  }, [activeView]);
 
   const handleSend = (e) => {
     if (e) e.preventDefault();
@@ -427,9 +434,22 @@ export default function CoachTeams() {
               </div>
             ) : (
               <>
-                <div style={{ padding: "1rem 1.5rem", background: "var(--theme-surface)", borderBottom: "1px solid var(--theme-border)", display: "flex", alignItems: "center", gap: "1rem" }}>
-                  <button onClick={() => setSidebarOpen(!sidebarOpen)} className="btn-ghost" style={{ padding: "0.5rem", borderRadius: 8, background: "var(--theme-surface-2)" }}>
+                <div style={{ padding: "1rem 1.5rem", background: "var(--theme-surface)", borderBottom: "1px solid var(--theme-border)", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <button
+                    onClick={() => setShowTeamMemberList((prev) => !prev)}
+                    className="btn-ghost"
+                    style={{ padding: "0.5rem", borderRadius: 8, background: "var(--theme-surface-2)" }}
+                    title="Show team members"
+                  >
                     <Users size={18} />
+                  </button>
+                  <button
+                    onClick={() => setSidebarOpen((prev) => !prev)}
+                    className="btn-ghost"
+                    style={{ padding: "0.5rem", borderRadius: 8, background: "var(--theme-surface-2)" }}
+                    title={sidebarOpen ? "Collapse sidebar" : "Open sidebar"}
+                  >
+                    <ChevronLeft size={18} style={{ transform: sidebarOpen ? "rotate(0deg)" : "rotate(180deg)" }} />
                   </button>
                   {renderAvatar(activeView.name, activeView.avatar, 46, activeView.type === "team_chat" ? "team" : "athlete")}
                   <div>
@@ -440,6 +460,52 @@ export default function CoachTeams() {
                   </div>
                 </div>
 
+                {showTeamMemberList && activeView.type === "team_chat" && (() => {
+                  const currentTeam = teams.find((team) => team._id === activeView.id);
+                  return (
+                    <div style={{ padding: "1rem 1.5rem", background: "var(--theme-surface-2)", borderBottom: "1px solid var(--theme-border)", display: "flex", flexDirection: "column", gap: "1rem" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "var(--theme-text)" }}>Team Members</div>
+                          <div style={{ fontSize: "0.82rem", color: "var(--theme-muted)" }}>{(currentTeam?.athletes?.length || 0) + (currentTeam?.coaches?.length || 0)} members</div>
+                        </div>
+                        <button
+                          onClick={() => setShowTeamMemberList(false)}
+                          className="btn-ghost"
+                          style={{ padding: "0.5rem", borderRadius: 8, background: "var(--theme-surface)" }}
+                        >
+                          Close
+                        </button>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                        <div>
+                          <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--theme-muted)", marginBottom: "0.75rem" }}>Coaches</div>
+                          {currentTeam?.coaches?.length ? currentTeam.coaches.map((coach) => (
+                            <div key={coach._id} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.65rem 0", borderBottom: "1px solid var(--theme-border)" }}>
+                              {renderAvatar(coach.name || coach.user?.name, coach.profilePic || coach.user?.profilePic, 32, "coach")}
+                              <div>
+                                <div style={{ fontWeight: 700 }}>{coach.name || coach.user?.name || "Coach"}</div>
+                                <div style={{ fontSize: "0.78rem", color: "var(--theme-muted)" }}>{coach.user?.email || "Coach account"}</div>
+                              </div>
+                            </div>
+                          )) : <div style={{ color: "var(--theme-muted)", fontSize: "0.9rem" }}>No coaches assigned.</div>}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--theme-muted)", marginBottom: "0.75rem" }}>Athletes</div>
+                          {currentTeam?.athletes?.length ? currentTeam.athletes.map((athlete) => (
+                            <div key={athlete._id} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.65rem 0", borderBottom: "1px solid var(--theme-border)" }}>
+                              {renderAvatar(athlete.name || athlete.user?.name, athlete.profilePic || athlete.user?.profilePic, 32, "athlete")}
+                              <div>
+                                <div style={{ fontWeight: 700 }}>{athlete.name || athlete.user?.name || "Athlete"}</div>
+                                <div style={{ fontSize: "0.78rem", color: "var(--theme-muted)" }}>{athlete.user?.email || "Athlete account"}</div>
+                              </div>
+                            </div>
+                          )) : <div style={{ color: "var(--theme-muted)", fontSize: "0.9rem" }}>No athletes in this team.</div>}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
                 <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
                   {messages.some(m => m.isPinned) && (
                     <div style={{ background: "rgba(245,158,11,0.1)", borderBottom: "1px solid rgba(245,158,11,0.2)", padding: "0.5rem 1rem", display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }} onClick={() => {
