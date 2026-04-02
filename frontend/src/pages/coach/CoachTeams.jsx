@@ -168,14 +168,18 @@ export default function CoachTeams() {
     const roomName =
       activeView.type === "team_chat"
         ? `team_${activeView.id}`
-        : `dm_${[user._id, activeView.id].sort().join("_")}`;
+        : activeView.type === "club_chat"
+          ? `club_${activeView.id}`
+          : `dm_${[user._id, activeView.id].sort().join("_")}`;
 
     socket.emit("join_room", roomName);
 
     const historyUrl =
       activeView.type === "team_chat"
         ? `${API}/api/chat/team/${activeView.id}`
-        : `${API}/api/chat/direct/${activeView.id}`;
+        : activeView.type === "club_chat"
+          ? `${API}/api/chat/club/${activeView.id}`
+          : `${API}/api/chat/direct/${activeView.id}`;
 
     fetch(historyUrl, { credentials: "include" })
       .then((r) => r.json())
@@ -209,13 +213,16 @@ export default function CoachTeams() {
     const roomName =
       activeView.type === "team_chat"
         ? `team_${activeView.id}`
-        : `dm_${[user._id, activeView.id].sort().join("_")}`;
+        : activeView.type === "club_chat"
+          ? `club_${activeView.id}`
+          : `dm_${[user._id, activeView.id].sort().join("_")}`;
 
     socket.emit("send_message", {
       room: roomName,
       sender: user._id,
       text: text.trim(),
       teamGroup: activeView.type === "team_chat" ? activeView.id : null,
+      clubGroup: activeView.type === "club_chat" ? activeView.id : null,
       receiver: activeView.type === "dm" ? activeView.id : null,
     });
 
@@ -244,13 +251,16 @@ export default function CoachTeams() {
         const roomName =
           activeView.type === "team_chat"
             ? `team_${activeView.id}`
-            : `dm_${[user._id, activeView.id].sort().join("_")}`;
+            : activeView.type === "club_chat"
+              ? `club_${activeView.id}`
+              : `dm_${[user._id, activeView.id].sort().join("_")}`;
 
         socket.emit("send_message", {
           room: roomName,
           sender: user._id,
           text: "",
           teamGroup: activeView.type === "team_chat" ? activeView.id : null,
+          clubGroup: activeView.type === "club_chat" ? activeView.id : null,
           receiver: activeView.type === "dm" ? activeView.id : null,
           fileUrl: data.url,
           fileType: file.type.startsWith("image/") ? "image" : "document",
@@ -276,13 +286,16 @@ export default function CoachTeams() {
         const roomName =
           activeView.type === "team_chat"
             ? `team_${activeView.id}`
-            : `dm_${[user._id, activeView.id].sort().join("_")}`;
+            : activeView.type === "club_chat"
+              ? `club_${activeView.id}`
+              : `dm_${[user._id, activeView.id].sort().join("_")}`;
 
         socket.emit("send_message", {
           room: roomName,
           sender: user._id,
           text: "Shared Location",
           teamGroup: activeView.type === "team_chat" ? activeView.id : null,
+          clubGroup: activeView.type === "club_chat" ? activeView.id : null,
           receiver: activeView.type === "dm" ? activeView.id : null,
           fileUrl: `https://www.google.com/maps?q=${lat},${lng}`,
           fileType: "location",
@@ -351,6 +364,30 @@ export default function CoachTeams() {
         <div style={{ flex: 1, display: "flex", gap: "1rem", overflow: "hidden", paddingBottom: "1rem" }}>
           {sidebarOpen && (
             <div className="card" style={{ width: 320, display: "flex", flexDirection: "column", padding: "1rem 0", overflowY: "auto", ...panelCardStyle }}>
+              <h3 style={sectionTitleStyle}>Club Lobby</h3>
+              {clubs.length === 0 ? (
+                <div style={{ padding: "0 1.2rem", fontSize: "0.9rem", color: "var(--theme-muted)", marginBottom: "1rem" }}>No club lobbies available.</div>
+              ) : (
+                clubs.map((club) => (
+                  <div
+                    key={club._id}
+                    onClick={() => {
+                      setActiveView({ type: "club_chat", id: club._id, name: `${club.name} Lobby`, avatar: club.profilePic });
+                      setShowTeamMemberList(false);
+                    }}
+                    style={{ padding: "0.9rem 1.2rem", display: "flex", alignItems: "center", gap: "0.9rem", cursor: "pointer", background: activeView?.type === "club_chat" && activeView?.id === club._id ? "color-mix(in srgb, var(--theme-primary) 12%, transparent)" : "transparent", borderLeft: activeView?.type === "club_chat" && activeView?.id === club._id ? "3px solid var(--theme-primary)" : "3px solid transparent" }}
+                  >
+                    {renderAvatar(club.name, club.profilePic, 44, "team")}
+                    <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
+                      <span style={{ fontWeight: 700, fontSize: "0.98rem", color: "var(--theme-text)", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>{club.name} Lobby</span>
+                      <span style={{ fontSize: "0.76rem", color: "var(--theme-muted)", fontWeight: 600 }}>Club-wide chat</span>
+                    </div>
+                  </div>
+                ))
+              )}
+
+              <hr style={{ border: 0, borderBottom: "1px solid var(--theme-border)", margin: "1rem 1.2rem" }} />
+
               <h3 style={sectionTitleStyle}>My Instructed Teams</h3>
               {joinedTeams.length === 0 ? (
                 <div style={{ padding: "0 1.2rem", fontSize: "0.9rem", color: "var(--theme-muted)", marginBottom: "1rem" }}>No instructed teams.</div>
@@ -455,7 +492,7 @@ export default function CoachTeams() {
                   <div>
                     <h3 style={{ margin: 0, fontSize: "1.08rem", color: "var(--theme-text)", fontWeight: 800 }}>{activeView.name}</h3>
                     <span style={{ fontSize: "0.75rem", color: "var(--theme-primary)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                      {activeView.type === "team_chat" ? "Team Instruction & Announcements" : "Athlete Direct Feedback"}
+                      {activeView.type === "team_chat" ? "Team Instruction & Announcements" : activeView.type === "club_chat" ? "Club Lobby" : "Athlete Direct Feedback"}
                     </span>
                   </div>
                 </div>
