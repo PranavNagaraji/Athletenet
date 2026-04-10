@@ -31,6 +31,7 @@ import AthleteChat        from "./pages/athlete/AthleteChat";
 import AthleteFeed        from "./pages/athlete/AthleteFeed";
 import AthleteTournaments from "./pages/athlete/AthleteTournaments";
 import ClubTournaments    from "./pages/club/ClubTournaments";
+import AthleteTasks       from "./pages/athlete/AthleteTasks";
 
 // Coach pages
 import CoachLayout      from "./pages/coach/CoachLayout";
@@ -39,6 +40,11 @@ import CoachProfile     from "./pages/coach/CoachProfile";
 import CoachClubs       from "./pages/coach/CoachClubs";
 import CoachTeams       from "./pages/coach/CoachTeams";
 import CoachRequests    from "./pages/coach/CoachRequests";
+import CoachTraining    from "./pages/coach/CoachTraining";
+import CoachPerformance from "./pages/coach/CoachPerformance";
+import CoachEvents      from "./pages/coach/CoachEvents";
+import CoachAthletes    from "./pages/coach/CoachAthletes";
+import CoachTasks       from "./pages/coach/CoachTasks";
 
 export default function App() {
   return (
@@ -81,16 +87,22 @@ export default function App() {
           <Route path="bookings"    element={<AthleteBookings    />} />
           <Route path="feed"        element={<AthleteFeed        />} />
           <Route path="tournaments" element={<AthleteTournaments />} />
+          <Route path="tasks"       element={<AthleteTasks       />} />
         </Route>
 
         {/* Coach dashboard – nested under sidebar layout */}
         <Route path="/coach" element={<CoachLayout />}>
           <Route index element={<Navigate to="/coach/dashboard" replace />} />
-          <Route path="dashboard" element={<CoachDashboard />} />
-          <Route path="profile"   element={<CoachProfile   />} />
-          <Route path="clubs"     element={<CoachClubs     />} />
-          <Route path="teams"     element={<CoachTeams     />} />
-          <Route path="requests"  element={<CoachRequests  />} />
+          <Route path="dashboard"   element={<CoachDashboard />} />
+          <Route path="profile"     element={<CoachProfile   />} />
+          <Route path="clubs"       element={<CoachClubs     />} />
+          <Route path="teams"       element={<CoachTeams     />} />
+          <Route path="requests"    element={<CoachRequests  />} />
+          <Route path="training"    element={<CoachTraining    />} />
+          <Route path="performance" element={<CoachPerformance />} />
+          <Route path="events"      element={<CoachEvents      />} />
+          <Route path="athletes"    element={<CoachAthletes    />} />
+          <Route path="tasks"       element={<CoachTasks       />} />
         </Route>
       </Route>
 
