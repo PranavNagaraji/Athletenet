@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AlertCircle, Building2, Loader2, Save } from "lucide-react";
 import "../club/ClubLayout.css";
 import { useAuth } from "../../context/AuthContext";
+import { VALIDATION_LIMITS, validateFile } from "../../utils/formValidation";
 
 const API = import.meta.env.VITE_BACKEND_URL;
 
@@ -40,6 +41,11 @@ export default function ClubProfile() {
   const handleUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
+    const fileError = validateFile(file);
+    if (fileError) {
+      setMsg({ type: "error", text: fileError });
+      return;
+    }
     setUploading(true);
     setMsg(null);
 
@@ -63,20 +69,34 @@ export default function ClubProfile() {
 
   const handleSave = async (event) => {
     event.preventDefault();
+    const trimmedName = form.name.trim();
+    const trimmedSpecialization = form.specialization.trim();
+    const facilitiesList = form.facilities
+      ? form.facilities
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+      : [];
+    const establishedYear = form.establishedYear === "" ? undefined : Number(form.establishedYear);
+    const currentYear = new Date().getFullYear();
+
+    if (trimmedName.length < VALIDATION_LIMITS.nameMin) return setMsg({ type: "error", text: "Please enter a valid club name." });
+    if (trimmedName.length > VALIDATION_LIMITS.clubNameMax) return setMsg({ type: "error", text: "Club name is too long." });
+    if (trimmedSpecialization.length > VALIDATION_LIMITS.specializationMax) return setMsg({ type: "error", text: "Specialization is too long." });
+    if (form.facilities.length > VALIDATION_LIMITS.facilitiesMax) return setMsg({ type: "error", text: "Facilities list is too long." });
+    if (establishedYear !== undefined && (!Number.isInteger(establishedYear) || establishedYear < 1800 || establishedYear > currentYear)) {
+      return setMsg({ type: "error", text: "Established year must be between 1800 and the current year." });
+    }
+
     setSaving(true);
     setMsg(null);
 
     const payload = {
-      name: form.name,
+      name: trimmedName,
       profilePic: form.profilePic,
-      establishedYear: Number(form.establishedYear) || undefined,
-      specialization: form.specialization || null,
-      facilities: form.facilities
-        ? form.facilities
-            .split(",")
-            .map((item) => item.trim())
-            .filter(Boolean)
-        : [],
+      establishedYear,
+      specialization: trimmedSpecialization || null,
+      facilities: facilitiesList,
     };
 
     try {
@@ -91,7 +111,7 @@ export default function ClubProfile() {
           method: "PUT",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: form.name, profilePic: form.profilePic }),
+          body: JSON.stringify({ name: trimmedName, profilePic: form.profilePic }),
         }),
       ]);
 
@@ -232,6 +252,8 @@ export default function ClubProfile() {
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                 placeholder="e.g. Thunder FC"
                 required
+                minLength={VALIDATION_LIMITS.nameMin}
+                maxLength={VALIDATION_LIMITS.clubNameMax}
               />
             </div>
 
@@ -267,6 +289,7 @@ export default function ClubProfile() {
                   value={form.specialization}
                   onChange={(event) => setForm((current) => ({ ...current, specialization: event.target.value }))}
                   placeholder="e.g. Football"
+                  maxLength={VALIDATION_LIMITS.specializationMax}
                 />
               </div>
             </div>
@@ -279,6 +302,7 @@ export default function ClubProfile() {
                 value={form.facilities}
                 onChange={(event) => setForm((current) => ({ ...current, facilities: event.target.value }))}
                 placeholder="e.g. Gym, Pool, Track, Indoor Court"
+                maxLength={VALIDATION_LIMITS.facilitiesMax}
               />
             </div>
 

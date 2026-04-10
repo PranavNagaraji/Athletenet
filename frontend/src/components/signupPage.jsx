@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { VALIDATION_LIMITS, isStrongPassword, isValidEmail, normalizeText } from "../utils/formValidation";
 
 export default function Signup() {
     const backend_url = import.meta.env.VITE_BACKEND_URL;
@@ -11,10 +12,18 @@ export default function Signup() {
 
         const formData = new FormData(e.target);
 
-        const name = formData.get("name");
-        const email = formData.get("email");
+        const name = normalizeText(formData.get("name"));
+        const email = normalizeText(formData.get("email"));
         const password = formData.get("password");
         const role = formData.get("role");
+
+        if (
+            name.length < VALIDATION_LIMITS.nameMin ||
+            !isValidEmail(email) ||
+            !isStrongPassword(password)
+        ) {
+            return;
+        }
 
         const res = await fetch(`${backend_url}/api/auth/signup`, {
             method: "POST",
@@ -47,15 +56,15 @@ export default function Signup() {
                 <legend>Signup</legend>
 
                 <label>Name</label>
-                <input type="text" name="name" required />
+                <input type="text" name="name" required minLength={VALIDATION_LIMITS.nameMin} maxLength={VALIDATION_LIMITS.nameMax} />
                 <br />
 
                 <label>Email</label>
-                <input type="email" name="email" required />
+                <input type="email" name="email" required maxLength={120} />
                 <br />
 
                 <label>Password</label>
-                <input type="password" name="password" required />
+                <input type="password" name="password" required minLength={8} maxLength={128} />
                 <br />
 
                 <label>Role</label>

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Zap, Mail, Lock, User, PersonStanding, Shield, Building2, Loader2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
+import { VALIDATION_LIMITS, isStrongPassword, isValidEmail, normalizeText } from "../utils/formValidation";
 import "./AuthPage.css";
 
 export default function AuthPage({ defaultMode = "login" }) {
@@ -27,13 +28,31 @@ export default function AuthPage({ defaultMode = "login" }) {
 
     const fd = new FormData(e.target);
     const payload = {
-      email: fd.get("email"),
+      email: normalizeText(fd.get("email")),
       password: fd.get("password"),
     };
 
     if (mode === "signup") {
-      payload.name = fd.get("name");
+      payload.name = normalizeText(fd.get("name"));
       payload.role = fd.get("role") || role;
+    }
+
+    if (!isValidEmail(payload.email)) {
+      setError("Please enter a valid email address.");
+      setLoading(false);
+      return;
+    }
+
+    if (!isStrongPassword(payload.password)) {
+      setError("Password must be at least 8 characters long.");
+      setLoading(false);
+      return;
+    }
+
+    if (mode === "signup" && payload.name.length < VALIDATION_LIMITS.nameMin) {
+      setError("Please enter your full name.");
+      setLoading(false);
+      return;
     }
 
     const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/signup";
@@ -79,11 +98,11 @@ export default function AuthPage({ defaultMode = "login" }) {
           <form onSubmit={handleSubmit} className="auth-form" autoComplete="on">
             <div className="input-group animate-slide-up stagger-2">
               <span className="input-icon"><Mail size={18} /></span>
-              <input type="email" name="email" placeholder="Email address" required autoComplete="email" />
+              <input type="email" name="email" placeholder="Email address" required autoComplete="email" maxLength={120} />
             </div>
             <div className="input-group animate-slide-up stagger-3">
               <span className="input-icon"><Lock size={18} /></span>
-              <input type="password" name="password" placeholder="Password" required autoComplete="current-password" />
+              <input type="password" name="password" placeholder="Password" required autoComplete="current-password" minLength={8} maxLength={128} />
             </div>
             {error && <div className="auth-error animate-slide-up">{error}</div>}
             <button type="submit" className="auth-submit-btn animate-slide-up stagger-4" disabled={loading}>
@@ -109,15 +128,15 @@ export default function AuthPage({ defaultMode = "login" }) {
           <form onSubmit={handleSubmit} className="auth-form" autoComplete="on">
             <div className="input-group animate-slide-up stagger-1">
               <span className="input-icon"><User size={18} /></span>
-              <input type="text" name="name" placeholder="Full name" required autoComplete="name" />
+              <input type="text" name="name" placeholder="Full name" required autoComplete="name" minLength={VALIDATION_LIMITS.nameMin} maxLength={VALIDATION_LIMITS.nameMax} />
             </div>
             <div className="input-group animate-slide-up stagger-2">
               <span className="input-icon"><Mail size={18} /></span>
-              <input type="email" name="email" placeholder="Email address" required autoComplete="email" />
+              <input type="email" name="email" placeholder="Email address" required autoComplete="email" maxLength={120} />
             </div>
             <div className="input-group animate-slide-up stagger-2">
               <span className="input-icon"><Lock size={18} /></span>
-              <input type="password" name="password" placeholder="Password" required autoComplete="new-password" />
+              <input type="password" name="password" placeholder="Password" required autoComplete="new-password" minLength={8} maxLength={128} />
             </div>
 
             <div className="role-picker animate-slide-up stagger-3">

@@ -4,6 +4,7 @@ import { Save, Loader2, UserRound, AlertCircle, Building2, Send, Users, Compass,
 import { useAuth } from "../../context/AuthContext";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
+import { VALIDATION_LIMITS, getNumberInRange, validateFile } from "../../utils/formValidation";
 import "../club/ClubLayout.css";
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -65,6 +66,11 @@ export default function AthleteProfile() {
   const handleUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    const fileError = validateFile(file);
+    if (fileError) {
+      setMsg({ type: "error", text: fileError });
+      return;
+    }
     setUploading(true); setMsg(null);
     const fd = new FormData(); fd.append("image", file);
     try {
@@ -78,11 +84,26 @@ export default function AthleteProfile() {
 
   const handleSave = async (e) => {
     if (e) e.preventDefault();
+    const age = getNumberInRange(form.age, 5, 100);
+    const height = getNumberInRange(form.height, 50, 260);
+    const weight = getNumberInRange(form.weight, 20, 300);
+    const trimmedName = form.name.trim();
+    const trimmedBio = form.bio.trim();
+    const trimmedLocationName = form.location?.name?.trim() || "";
+
+    if (trimmedName.length < VALIDATION_LIMITS.nameMin) return setMsg({ type: "error", text: "Please enter your full name." });
+    if (trimmedBio.length > VALIDATION_LIMITS.bioMax) return setMsg({ type: "error", text: `Bio must be ${VALIDATION_LIMITS.bioMax} characters or fewer.` });
+    if (form.age !== "" && age === null) return setMsg({ type: "error", text: "Age must be between 5 and 100." });
+    if (form.height !== "" && height === null) return setMsg({ type: "error", text: "Height must be between 50 and 260 cm." });
+    if (form.weight !== "" && weight === null) return setMsg({ type: "error", text: "Weight must be between 20 and 300 kg." });
+    if (trimmedLocationName.length > VALIDATION_LIMITS.locationNameMax) return setMsg({ type: "error", text: "Location name is too long." });
+    if (form.sports.length > 8) return setMsg({ type: "error", text: "Please keep your sports list to 8 or fewer." });
+
     setSaving(true); setMsg(null);
     
-    const athPayload = { age: Number(form.age), height: Number(form.height), weight: Number(form.weight) };
+    const athPayload = { age, height, weight };
     // user updates go to specific fields
-    const userPayload = { name: form.name, profilePic: form.profilePic, bio: form.bio, sports: form.sports, location: form.location };
+    const userPayload = { name: trimmedName, profilePic: form.profilePic, bio: trimmedBio, sports: form.sports, location: { ...form.location, name: trimmedLocationName } };
 
     try {
       const [resAth, resUser] = await Promise.all([
@@ -276,7 +297,7 @@ export default function AthleteProfile() {
                         </div>
                         <div style={{ flex: 1 }}>
                             <label className="field-label" style={{ marginBottom: "0.4rem", display: "block" }}>Full Name</label>
-                            <input className="field-input" type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required style={{ padding: "0.6rem 1rem" }} />
+                            <input className="field-input" type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required minLength={VALIDATION_LIMITS.nameMin} maxLength={VALIDATION_LIMITS.nameMax} style={{ padding: "0.6rem 1rem" }} />
                         </div>
                     </div>
 
@@ -285,6 +306,7 @@ export default function AthleteProfile() {
                         <textarea 
                             className="field-input" rows="3" style={{ flex: 1 }}
                             value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} 
+                            maxLength={VALIDATION_LIMITS.bioMax}
                             placeholder="Tell teams and clubs about your sports journey, achievements, and play style..." 
                         />
                     </div>
@@ -297,7 +319,7 @@ export default function AthleteProfile() {
                             </button>
                         </div>
                         <div className="field-group" style={{ marginBottom: "0.8rem" }}>
-                            <input className="field-input" type="text" placeholder="City or Region Name (e.g. London)" value={form.location?.name || ""} onChange={e => setForm(f => ({ ...f, location: { ...f.location, name: e.target.value } }))} style={{ padding: "0.5rem 0.8rem", fontSize: "0.85rem" }} />
+                            <input className="field-input" type="text" placeholder="City or Region Name (e.g. London)" value={form.location?.name || ""} onChange={e => setForm(f => ({ ...f, location: { ...f.location, name: e.target.value } }))} maxLength={VALIDATION_LIMITS.locationNameMax} style={{ padding: "0.5rem 0.8rem", fontSize: "0.85rem" }} />
                         </div>
                         
                         {!showMapPicker ? (
@@ -333,11 +355,11 @@ export default function AthleteProfile() {
                         </div>
                         <div className="field-group">
                             <label className="field-label">Height (cm)</label>
-                            <input className="field-input" type="number" value={form.height} onChange={e => setForm(f => ({ ...f, height: e.target.value }))} style={{ padding: "0.6rem", textAlign: "center" }} />
+                            <input className="field-input" type="number" min="50" max="260" value={form.height} onChange={e => setForm(f => ({ ...f, height: e.target.value }))} style={{ padding: "0.6rem", textAlign: "center" }} />
                         </div>
                         <div className="field-group">
                             <label className="field-label">Weight (kg)</label>
-                            <input className="field-input" type="number" value={form.weight} onChange={e => setForm(f => ({ ...f, weight: e.target.value }))} style={{ padding: "0.6rem", textAlign: "center" }} />
+                            <input className="field-input" type="number" min="20" max="300" value={form.weight} onChange={e => setForm(f => ({ ...f, weight: e.target.value }))} style={{ padding: "0.6rem", textAlign: "center" }} />
                         </div>
                     </div>
 

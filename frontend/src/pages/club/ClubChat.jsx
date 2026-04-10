@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { MessageSquare, Send, Users, User, Dumbbell, Paperclip, Loader2, FileText, Trophy, Info, ShieldCheck, MapPin, Image, X } from "lucide-react";
 import { io } from "socket.io-client";
 import { useAuth } from "../../context/AuthContext";
+import { VALIDATION_LIMITS, validateFile } from "../../utils/formValidation";
 import "./ClubLayout.css";
 
 const API = import.meta.env.VITE_BACKEND_URL;
@@ -158,6 +159,7 @@ export default function ClubChat() {
   const handleSend = (e) => {
     e.preventDefault();
     if (!text.trim() || !socket || !activeChat) return;
+    if (text.trim().length > VALIDATION_LIMITS.messageMax) return;
 
     const roomName = activeChat.type === "group" 
                     ? `club_${activeChat.id}` 
@@ -183,6 +185,8 @@ export default function ClubChat() {
   const handleFileUpload = async (e) => {
       const file = e.target.files[0];
       if (!file || !socket || !activeChat) return;
+      const fileError = validateFile(file, { maxBytes: VALIDATION_LIMITS.attachmentMaxBytes, allowNonImages: true });
+      if (fileError) return;
 
       setUploading(true);
       const formData = new FormData();
@@ -505,6 +509,7 @@ export default function ClubChat() {
                    </button>
                    <input 
                      type="text" value={text} onChange={e => setText(e.target.value)} 
+                     maxLength={VALIDATION_LIMITS.messageMax}
                      placeholder={activeChat.type === "group" ? "Broadcast message to all club athletes..." : `Message ${activeChat.name}...`} 
                      style={{ flex: 1, background: "var(--theme-surface-2)", border: "1px solid var(--theme-border)", borderRadius: 25, padding: "0.9rem 1.4rem", color: "var(--theme-text)", outline: "none", fontSize: "0.95rem" }}
                    />

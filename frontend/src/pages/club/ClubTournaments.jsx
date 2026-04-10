@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Trophy, Plus, Trash2, Pencil, Loader2, X, Calendar, AlertCircle, Users } from "lucide-react";
 import "../club/ClubLayout.css";
+import { VALIDATION_LIMITS, isDateRangeValid } from "../../utils/formValidation";
 
 const API = import.meta.env.VITE_BACKEND_URL;
 
@@ -92,6 +93,17 @@ export default function ClubTournaments() {
   };
 
   const handleSave = async () => {
+    const payload = {
+      ...form,
+      name: form.name.trim(),
+      sport: form.sport.trim().toLowerCase(),
+      description: form.description.trim(),
+    };
+    if (payload.name.length < 3 || payload.name.length > VALIDATION_LIMITS.titleMax) return showMsg("error", "Tournament name must be between 3 and 100 characters.");
+    if (!payload.sport || payload.sport.length > VALIDATION_LIMITS.sportMax) return showMsg("error", "Please enter a valid sport.");
+    if (payload.description.length > VALIDATION_LIMITS.descriptionMax) return showMsg("error", "Description is too long.");
+    if (!isDateRangeValid(payload.startDate, payload.endDate)) return showMsg("error", "End date must be the same as or after the start date.");
+
     setSaving(true);
     try {
       const url    = editTourney ? `${API}/api/tournament/${editTourney._id}` : `${API}/api/tournament/create`;
@@ -99,7 +111,7 @@ export default function ClubTournaments() {
       const res = await fetch(url, {
         method, credentials:"include",
         headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       if (res.ok) { showMsg("success", editTourney?"Tournament updated!":"Tournament created!"); setShowModal(false); fetchTourneys(); }
       else { const d = await res.json(); showMsg("error", d.message); }
@@ -253,24 +265,24 @@ export default function ClubTournaments() {
             <div className="form-grid" style={{ gap:"0.9rem" }}>
               <div className="field-group">
                 <label className="field-label">Tournament Name</label>
-                <input className="field-input" placeholder="e.g. Winter Cup 2026" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/>
+                <input className="field-input" placeholder="e.g. Winter Cup 2026" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} required minLength={3} maxLength={VALIDATION_LIMITS.titleMax}/>
               </div>
               <div className="field-group">
                 <label className="field-label">Sport</label>
-                <input className="field-input" placeholder="e.g. Basketball" value={form.sport} onChange={e=>setForm(f=>({...f,sport:e.target.value}))}/>
+                <input className="field-input" placeholder="e.g. Basketball" value={form.sport} onChange={e=>setForm(f=>({...f,sport:e.target.value}))} required maxLength={VALIDATION_LIMITS.sportMax}/>
               </div>
               <div className="field-group">
                 <label className="field-label">Description (Optional)</label>
-                <textarea className="field-input" style={{ minHeight: 60 }} placeholder="Short summary of rules or prizes..." value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))}/>
+                <textarea className="field-input" style={{ minHeight: 60 }} placeholder="Short summary of rules or prizes..." value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} maxLength={VALIDATION_LIMITS.descriptionMax}/>
               </div>
               <div className="form-grid form-grid-2">
                 <div className="field-group">
                   <label className="field-label">Start Date</label>
-                  <input className="field-input" type="date" value={form.startDate} onChange={e=>setForm(f=>({...f,startDate:e.target.value}))}/>
+                  <input className="field-input" type="date" required value={form.startDate} onChange={e=>setForm(f=>({...f,startDate:e.target.value}))}/>
                 </div>
                 <div className="field-group">
                   <label className="field-label">End Date</label>
-                  <input className="field-input" type="date" value={form.endDate} onChange={e=>setForm(f=>({...f,endDate:e.target.value}))}/>
+                  <input className="field-input" type="date" required min={form.startDate || undefined} value={form.endDate} onChange={e=>setForm(f=>({...f,endDate:e.target.value}))}/>
                 </div>
               </div>
               <div className="form-grid form-grid-2">

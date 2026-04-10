@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext";
+import { isStrongPassword, isValidEmail, normalizeText } from "../utils/formValidation";
 
 export default function LoginPage() {
   const backend_url = import.meta.env.VITE_BACKEND_URL;
@@ -11,8 +12,12 @@ export default function LoginPage() {
     e.preventDefault();
 
     const formData = new FormData(e.target);
-    const email = formData.get("email");
+    const email = normalizeText(formData.get("email"));
     const password = formData.get("password");
+
+    if (!isValidEmail(email) || !isStrongPassword(password)) {
+      return;
+    }
 
     const res = await fetch(`${backend_url}/api/auth/login`, {
       method: 'POST',
@@ -38,11 +43,11 @@ export default function LoginPage() {
         <legend>Login</legend>
 
         <label>Email</label>
-        <input type="email" name="email" placeholder="example@domain.com" />
+        <input type="email" name="email" placeholder="example@domain.com" required maxLength={120} />
         <br />
 
         <label>Password</label>
-        <input type="password" name="password" placeholder="Password" />
+        <input type="password" name="password" placeholder="Password" required minLength={8} maxLength={128} />
         <br />
 
         <button type="submit">Login</button>

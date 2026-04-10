@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Save, Loader2, UserRound, AlertCircle, Building2, Send, Users, Compass } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { VALIDATION_LIMITS, getNumberInRange, validateFile } from "../../utils/formValidation";
 import "../club/ClubLayout.css";
 
 const API = import.meta.env.VITE_BACKEND_URL;
@@ -40,6 +41,11 @@ export default function CoachProfile() {
   const handleUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    const fileError = validateFile(file);
+    if (fileError) {
+      setMsg({ type: "error", text: fileError });
+      return;
+    }
     setUploading(true);
     setMsg(null);
     const fd = new FormData();
@@ -58,14 +64,28 @@ export default function CoachProfile() {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    const age = getNumberInRange(form.age, 18, 100);
+    const height = getNumberInRange(form.height, 120, 260);
+    const weight = getNumberInRange(form.weight, 35, 300);
+    const experience = getNumberInRange(form.experience, 0, 80);
+    const trimmedName = form.name.trim();
+    const trimmedSpecialization = form.specialization.trim();
+
+    if (trimmedName.length < VALIDATION_LIMITS.nameMin) return setMsg({ type: "error", text: "Please enter a valid full name." });
+    if (form.age !== "" && age === null) return setMsg({ type: "error", text: "Age must be between 18 and 100." });
+    if (form.height !== "" && height === null) return setMsg({ type: "error", text: "Height must be between 120 and 260 cm." });
+    if (form.weight !== "" && weight === null) return setMsg({ type: "error", text: "Weight must be between 35 and 300 kg." });
+    if (form.experience !== "" && experience === null) return setMsg({ type: "error", text: "Experience must be between 0 and 80 years." });
+    if (trimmedSpecialization.length > VALIDATION_LIMITS.specializationMax) return setMsg({ type: "error", text: "Specialization is too long." });
+
     setSaving(true);
     setMsg(null);
     const coachPayload = {
-      age: Number(form.age),
-      height: Number(form.height),
-      weight: Number(form.weight),
-      experience: Number(form.experience),
-      specialization: form.specialization,
+      age,
+      height,
+      weight,
+      experience,
+      specialization: trimmedSpecialization,
     };
     try {
       const [resObj, resUser] = await Promise.all([
@@ -79,7 +99,7 @@ export default function CoachProfile() {
           method: "PUT",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: form.name, profilePic: form.profilePic }),
+          body: JSON.stringify({ name: trimmedName, profilePic: form.profilePic }),
         }),
       ]);
       if (resObj.ok && resUser.ok) {
@@ -256,7 +276,7 @@ export default function CoachProfile() {
             <form onSubmit={handleSave} className="form-grid">
               <div className="field-group">
                 <label className="field-label">Full Name</label>
-                <input className="field-input" type="text" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required />
+                <input className="field-input" type="text" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required minLength={VALIDATION_LIMITS.nameMin} maxLength={VALIDATION_LIMITS.nameMax} />
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "1rem" }}>
@@ -266,22 +286,22 @@ export default function CoachProfile() {
                 </div>
                 <div className="field-group">
                   <label className="field-label">Height (cm)</label>
-                  <input className="field-input" type="number" value={form.height} onChange={(e) => setForm((f) => ({ ...f, height: e.target.value }))} />
+                  <input className="field-input" type="number" min="120" max="260" value={form.height} onChange={(e) => setForm((f) => ({ ...f, height: e.target.value }))} />
                 </div>
                 <div className="field-group">
                   <label className="field-label">Weight (kg)</label>
-                  <input className="field-input" type="number" value={form.weight} onChange={(e) => setForm((f) => ({ ...f, weight: e.target.value }))} />
+                  <input className="field-input" type="number" min="35" max="300" value={form.weight} onChange={(e) => setForm((f) => ({ ...f, weight: e.target.value }))} />
                 </div>
               </div>
 
               <div className="form-grid form-grid-2">
                 <div className="field-group">
                   <label className="field-label">Experience (Years)</label>
-                  <input className="field-input" type="number" value={form.experience} onChange={(e) => setForm((f) => ({ ...f, experience: e.target.value }))} placeholder="e.g 5" />
+                  <input className="field-input" type="number" min="0" max="80" value={form.experience} onChange={(e) => setForm((f) => ({ ...f, experience: e.target.value }))} placeholder="e.g 5" />
                 </div>
                 <div className="field-group">
                   <label className="field-label">Specialization</label>
-                  <input className="field-input" type="text" value={form.specialization} onChange={(e) => setForm((f) => ({ ...f, specialization: e.target.value }))} placeholder="e.g Head Soccer Coach" />
+                  <input className="field-input" type="text" value={form.specialization} onChange={(e) => setForm((f) => ({ ...f, specialization: e.target.value }))} placeholder="e.g Head Soccer Coach" maxLength={VALIDATION_LIMITS.specializationMax} />
                 </div>
               </div>
 

@@ -6,6 +6,7 @@ import L from "leaflet";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
+import { VALIDATION_LIMITS, isTimeRangeValid, validateFile } from "../../utils/formValidation";
 import "../club/ClubLayout.css";
 
 // Fix Leaflet icons
@@ -59,6 +60,11 @@ export default function ClubPlaygrounds() {
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    const fileError = validateFile(file);
+    if (fileError) {
+      showMsg("error", fileError);
+      return;
+    }
     setUploadingImg(true);
     const fd = new FormData();
     fd.append("image", file);
@@ -145,14 +151,36 @@ export default function ClubPlaygrounds() {
   };
 
   const handleSave = async () => {
+    const trimmedName = form.name.trim();
+    const trimmedAddress = form.address.trim();
+    const length = Number(form.size.length);
+    const width = Number(form.size.width);
+    const lng = parseFloat(form.location.coordinates[0]);
+    const lat = parseFloat(form.location.coordinates[1]);
+    const normalizedCustomTimings = form.customTimings.map((slot) => ({ start: slot.start, end: slot.end }));
+
+    if (trimmedName.length < 3 || trimmedName.length > VALIDATION_LIMITS.titleMax) return showMsg("error", "Playground name must be between 3 and 100 characters.");
+    if (trimmedAddress.length < 5 || trimmedAddress.length > VALIDATION_LIMITS.addressMax) return showMsg("error", "Please enter a complete address.");
+    if (!Number.isFinite(length) || length < 5 || length > 500) return showMsg("error", "Length must be between 5 and 500 meters.");
+    if (!Number.isFinite(width) || width < 5 || width > 500) return showMsg("error", "Width must be between 5 and 500 meters.");
+    if (!isTimeRangeValid(form.openTime, form.closeTime)) return showMsg("error", "Close time must be after open time.");
+    if (!Number.isInteger(Number(form.slotDuration)) || Number(form.slotDuration) < 15 || Number(form.slotDuration) > 240) return showMsg("error", "Slot duration must be between 15 and 240 minutes.");
+    if (!Number.isFinite(lat) || lat < -90 || lat > 90 || !Number.isFinite(lng) || lng < -180 || lng > 180) return showMsg("error", "Please pick a valid map location.");
+    if (form.sports.length === 0) return showMsg("error", "Select at least one sport for this playground.");
+    if (form.images.length > 6) return showMsg("error", "Please keep playground images to 6 or fewer.");
+    if (normalizedCustomTimings.some((slot) => !isTimeRangeValid(slot.start, slot.end))) return showMsg("error", "Each custom operating interval must end after it starts.");
+
     setSaving(true);
     const payload = {
       ...form,
-      size: { length: Number(form.size.length), width: Number(form.size.width) },
+      name: trimmedName,
+      address: trimmedAddress,
+      size: { length, width },
       location: {
         type: "Point",
-        coordinates: [parseFloat(form.location.coordinates[0]), parseFloat(form.location.coordinates[1])],
+        coordinates: [lng, lat],
       },
+      customTimings: normalizedCustomTimings,
     };
     try {
       const url    = editPg ? `${API}/api/playground/${editPg._id}` : `${API}/api/playground/`;
@@ -263,20 +291,20 @@ export default function ClubPlaygrounds() {
             <div className="form-grid" style={{ gap:"0.9rem", maxHeight:"70vh", overflowY:"auto", paddingRight:"0.25rem" }}>
               <div className="field-group">
                 <label className="field-label">Name</label>
-                <input className="field-input" placeholder="Main Stadium" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/>
+                <input className="field-input" placeholder="Main Stadium" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} required minLength={3} maxLength={VALIDATION_LIMITS.titleMax}/>
               </div>
               <div className="field-group">
                 <label className="field-label">Address</label>
-                <input className="field-input" placeholder="123 Sports Lane" value={form.address} onChange={e=>setForm(f=>({...f,address:e.target.value}))}/>
+                <input className="field-input" placeholder="123 Sports Lane" value={form.address} onChange={e=>setForm(f=>({...f,address:e.target.value}))} required minLength={5} maxLength={VALIDATION_LIMITS.addressMax}/>
               </div>
               <div className="form-grid form-grid-2">
                 <div className="field-group">
                   <label className="field-label">Length (m)</label>
-                  <input className="field-input" type="number" placeholder="100" value={form.size.length} onChange={e=>setForm(f=>({...f,size:{...f.size,length:e.target.value}}))}/>
+                  <input className="field-input" type="number" min="5" max="500" placeholder="100" value={form.size.length} onChange={e=>setForm(f=>({...f,size:{...f.size,length:e.target.value}}))}/>
                 </div>
                 <div className="field-group">
                   <label className="field-label">Width (m)</label>
-                  <input className="field-input" type="number" placeholder="60" value={form.size.width} onChange={e=>setForm(f=>({...f,size:{...f.size,width:e.target.value}}))}/>
+                  <input className="field-input" type="number" min="5" max="500" placeholder="60" value={form.size.width} onChange={e=>setForm(f=>({...f,size:{...f.size,width:e.target.value}}))}/>
                 </div>
               </div>
 
@@ -291,7 +319,7 @@ export default function ClubPlaygrounds() {
                 </div>
                 <div className="field-group">
                   <label className="field-label">Slot (Mins)</label>
-                  <input type="number" className="field-input" placeholder="60" value={form.slotDuration} onChange={e=>setForm(f=>({...f,slotDuration:Number(e.target.value)}))} />
+                  <input type="number" className="field-input" min="15" max="240" step="15" placeholder="60" value={form.slotDuration} onChange={e=>setForm(f=>({...f,slotDuration:Number(e.target.value)}))} />
                 </div>
               </div>
 

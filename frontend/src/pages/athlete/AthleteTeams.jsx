@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { Users, Building2, UserPlus, Loader2, Trophy, MessageSquare, Send, Paperclip, User, FileText, Image, MapPin } from "lucide-react";
 import { io } from "socket.io-client";
 import { useAuth } from "../../context/AuthContext";
+import { VALIDATION_LIMITS, validateFile } from "../../utils/formValidation";
 import "../club/ClubLayout.css";
 
 const API = import.meta.env.VITE_BACKEND_URL;
@@ -122,6 +123,7 @@ export default function AthleteTeams() {
   const handleSend = (e) => {
     if (e) e.preventDefault();
     if (!text.trim() || !socket || !activeView || activeView.type === "join") return;
+    if (text.trim().length > VALIDATION_LIMITS.messageMax) return;
 
     const roomName = activeView.type === "team_chat" 
                     ? `team_${activeView.id}` 
@@ -145,6 +147,8 @@ export default function AthleteTeams() {
   const handleFileUpload = async (e) => {
       const file = e.target.files[0];
       if (!file || !socket || activeView.type === "join") return;
+      const fileError = validateFile(file, { maxBytes: VALIDATION_LIMITS.attachmentMaxBytes, allowNonImages: true });
+      if (fileError) return;
 
       setUploading(true);
       const formData = new FormData();
@@ -540,6 +544,7 @@ export default function AthleteTeams() {
                    value={text} 
                    onChange={e => setText(e.target.value)} 
                    placeholder="Type a message..." 
+                   maxLength={VALIDATION_LIMITS.messageMax}
                    style={{ flex: 1, background: "var(--theme-surface-2)", border: "1px solid var(--theme-border)", borderRadius: 25, padding: "0.9rem 1.4rem", color: "var(--theme-text)", outline: "none", fontSize: "0.95rem" }}
                  />
                  

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { MessageSquare, Send, Loader2, Users, Building2, User } from "lucide-react";
 import { io } from "socket.io-client";
 import { useAuth } from "../../context/AuthContext";
+import { VALIDATION_LIMITS } from "../../utils/formValidation";
 import "../club/ClubLayout.css";
 
 const API = import.meta.env.VITE_BACKEND_URL;
@@ -71,6 +72,7 @@ export default function AthleteChat() {
   const handleSend = (e) => {
     e.preventDefault();
     if (!text.trim() || !socket || !activeChat) return;
+    if (text.trim().length > VALIDATION_LIMITS.messageMax) return;
 
     const roomName = activeChat.type === "group" 
                     ? `club_${activeChat.id}` 
@@ -187,6 +189,7 @@ export default function AthleteChat() {
                    value={text} 
                    onChange={e => setText(e.target.value)} 
                    placeholder={`Message ${activeChat.name}...`} 
+                   maxLength={VALIDATION_LIMITS.messageMax}
                    style={{ flex: 1, background: "var(--c-surface2)", border: "1px solid var(--c-border)", borderRadius: 20, padding: "0.8rem 1.2rem", color: "var(--c-text)", outline: "none" }}
                  />
                  <button type="submit" disabled={!text.trim()} className="btn-primary" style={{ borderRadius: "50%", width: 45, height: 45, padding: 0, display: "flex", alignItems: "center", justifyContent: "center", opacity: text.trim() ? 1 : 0.5 }}>

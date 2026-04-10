@@ -162,7 +162,10 @@ export default function AthletePlaygrounds() {
 
   const handleBook = async (e) => {
     e.preventDefault();
-    if (!selectedSlot) return;
+    if (!bookingDate || !selectedSlot) {
+      showMsg("error", "Please choose a date and slot.");
+      return;
+    }
     setBookingDisabled(true);
     try {
       const res = await fetch(`${API}/api/booking`, {

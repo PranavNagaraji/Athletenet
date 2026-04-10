@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { Users, UserPlus, Loader2, Trophy, MessageSquare, Send, Paperclip, FileText, Image as ImageIcon, MapPin } from "lucide-react";
 import { io } from "socket.io-client";
 import { useAuth } from "../../context/AuthContext";
+import { VALIDATION_LIMITS, validateFile } from "../../utils/formValidation";
 import "../club/ClubLayout.css";
 
 const API = import.meta.env.VITE_BACKEND_URL;
@@ -184,6 +185,7 @@ export default function CoachTeams() {
   const handleSend = (e) => {
     if (e) e.preventDefault();
     if (!text.trim() || !socket || !activeView || activeView.type === "join") return;
+    if (text.trim().length > VALIDATION_LIMITS.messageMax) return;
 
     const roomName =
       activeView.type === "team_chat"
@@ -205,6 +207,8 @@ export default function CoachTeams() {
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file || !socket || !activeView || activeView.type === "join") return;
+    const fileError = validateFile(file, { maxBytes: VALIDATION_LIMITS.attachmentMaxBytes, allowNonImages: true });
+    if (fileError) return;
 
     setUploading(true);
     const formData = new FormData();
@@ -510,6 +514,7 @@ export default function CoachTeams() {
                       type="text"
                       value={text}
                       onChange={(e) => setText(e.target.value)}
+                      maxLength={VALIDATION_LIMITS.messageMax}
                       placeholder="Type an announcement or feedback..."
                       style={{ flex: 1, background: "var(--theme-surface-2)", border: "1px solid var(--theme-border)", borderRadius: 22, padding: "0.85rem 1.2rem", color: "var(--theme-text)", outline: "none", fontWeight: 600 }}
                     />
