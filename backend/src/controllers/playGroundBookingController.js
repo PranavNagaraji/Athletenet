@@ -109,7 +109,9 @@ export const getMyBookings = async (req, res) => {
     try {
         const bookings = await PlaygroundBooking.find({
             bookedBy: req.user._id
-        }).populate("playground");
+        })
+            .populate("playground")
+            .sort({ updatedAt: -1, createdAt: -1 });
 
         res.status(200).json(bookings);
     } catch (error) {
@@ -123,7 +125,8 @@ export const getPlaygroundBookings = async (req, res) => {
             playground: req.params.playgroundId
         })
             .populate("bookedBy", "name email")
-            .populate("playground");
+            .populate("playground")
+            .sort({ updatedAt: -1, createdAt: -1 });
 
         res.status(200).json(bookings);
     } catch (error) {

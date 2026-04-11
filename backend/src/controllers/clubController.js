@@ -57,7 +57,9 @@ export const updateClubProfile = async (req, res) => {
 
 export const getAllClubs = async (req, res) => {
     try {
-        const clubs = await Club.find().populate("admin", "name profilePic");
+        const clubs = await Club.find()
+            .populate("admin", "name profilePic")
+            .sort({ updatedAt: -1, createdAt: -1 });
         res.status(200).json(clubs);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -81,7 +83,9 @@ export const getCoachesByClub = async (req, res) => {
         const club = await Club.findOne({ $or: [{ _id: mongoose.Types.ObjectId.isValid(id) ? id : null }, { admin: mongoose.Types.ObjectId.isValid(id) ? id : null }] });
         if (!club) return res.status(404).json({ message: "Club not found" });
 
-        const coaches = await Coach.find({ clubs: club._id }).populate("user");
+        const coaches = await Coach.find({ clubs: club._id })
+            .populate("user")
+            .sort({ updatedAt: -1, createdAt: -1 });
         res.status(200).json(coaches);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -94,7 +98,9 @@ export const getAthletesByClub = async (req, res) => {
         const club = await Club.findOne({ $or: [{ _id: mongoose.Types.ObjectId.isValid(id) ? id : null }, { admin: mongoose.Types.ObjectId.isValid(id) ? id : null }] });
         if (!club) return res.status(404).json({ message: "Club not found" });
 
-        const athletes = await Athlete.find({ clubs: club._id }).populate("user");
+        const athletes = await Athlete.find({ clubs: club._id })
+            .populate("user")
+            .sort({ updatedAt: -1, createdAt: -1 });
         res.status(200).json(athletes);
     } catch (error) {
         res.status(500).json({ message: error.message });

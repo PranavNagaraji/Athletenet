@@ -18,6 +18,7 @@ import chatRouter from "./routes/chatRoutes.js";
 import tournamentRouter from "./routes/tournamentRoutes.js";
 import postRouter from "./routes/postRoutes.js";
 import trainingRouter from "./routes/trainingRoutes.js";
+import formationRouter from "./routes/formationRoutes.js";
 import path from "path";
 
 import "dotenv/config";
@@ -62,6 +63,7 @@ app.use('/api/chat', chatRouter);
 app.use('/api/tournament', tournamentRouter);
 app.use('/api/post', postRouter);
 app.use('/api/training', trainingRouter);
+app.use('/api/formations', formationRouter);
 
 // Serve static files for uploads
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));

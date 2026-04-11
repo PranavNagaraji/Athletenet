@@ -23,7 +23,8 @@ export const getMyTournaments = async (req, res) => {
         if (!club) return res.status(404).json({ message: "Club not found" });
         const tournaments = await Tournament.find({ club: club._id })
             .populate({ path: "club", populate: { path: "admin", select: "name profilePic" } })
-            .populate("teams", "name");
+            .populate("teams", "name")
+            .sort({ updatedAt: -1, createdAt: -1 });
         
         console.log(`[Tournament] Found ${tournaments.length} hosted tournaments for club ${club._id}`);
         res.status(200).json(tournaments);
@@ -71,7 +72,8 @@ export const getAllTournaments = async (req, res) => {
     try {
         const tournaments = await Tournament.find()
             .populate({ path: "club", populate: { path: "admin", select: "name profilePic" } })
-            .populate("teams", "name");
+            .populate("teams", "name")
+            .sort({ updatedAt: -1, createdAt: -1 });
         res.status(200).json(tournaments);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -118,7 +120,9 @@ export const getParticipatingTournaments = async (req, res) => {
         const tournaments = await Tournament.find({ 
             teams: { $in: teamIds },
             club: { $ne: club._id } // Not hosted by me
-        }).populate({ path: "club", populate: { path: "admin", select: "name profilePic" } });
+        })
+            .populate({ path: "club", populate: { path: "admin", select: "name profilePic" } })
+            .sort({ updatedAt: -1, createdAt: -1 });
 
         res.status(200).json(tournaments);
     } catch (error) {

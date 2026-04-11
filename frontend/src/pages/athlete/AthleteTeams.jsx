@@ -1,22 +1,31 @@
 import { useEffect, useState, useRef } from "react";
-import { Users, Building2, UserPlus, Loader2, Trophy, MessageSquare, Send, Paperclip, User, FileText, Image, MapPin } from "lucide-react";
+import { Users, Building2, UserPlus, Loader2, Trophy, MessageSquare, Send, Paperclip, User, FileText, Image, MapPin, Crosshair } from "lucide-react";
 import { io } from "socket.io-client";
 import { useAuth } from "../../context/AuthContext";
 import { VALIDATION_LIMITS, validateFile } from "../../utils/formValidation";
+import FormationsBoard from "../../components/FormationsBoard";
+import FormationChatCard from "../../components/FormationChatCard";
 import "../club/ClubLayout.css";
 
 const API = import.meta.env.VITE_BACKEND_URL;
+
+const SPORT_BG_MINI = {
+  football: "linear-gradient(135deg, #166534, #15803d)",
+  basketball: "linear-gradient(135deg, #7c2d12, #9a3412)",
+  cricket: "linear-gradient(135deg, #1e3a5f, #1e40af)",
+};
+const SPORT_ACCENT = { football: "#22c55e", basketball: "#f97316", cricket: "#38bdf8" };
+
+
 
 export default function AthleteTeams() {
   const { user } = useAuth();
   const [clubs, setClubs] = useState([]);
   const [teams, setTeams] = useState([]);
   const [coaches, setCoaches] = useState([]);
-  
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState(null); // { type: 'team_chat', id, name }, { type: 'dm', id, name, avatar }, { type: 'join', team }
+  const [activeView, setActiveView] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [socket, setSocket] = useState(null);
@@ -25,7 +34,6 @@ export default function AthleteTeams() {
   const [uploading, setUploading] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(null);
-
   const [athleteUserId, setAthleteUserId] = useState(null);
 
   useEffect(() => {
@@ -456,8 +464,22 @@ export default function AthleteTeams() {
                 </div>
 
                {/* Chat Log */}
-               <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem", background: "var(--theme-surface-2)" }}>
-                  {messages.length === 0 && <div style={{ textAlign: "center", color: "var(--theme-muted)", fontSize: "0.85rem", marginTop: "auto", marginBottom: "auto" }}>This is the beginning of the message history.</div>}
+               <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
+                  {messages.some(m => m.isPinned) && (
+                    <div style={{ background: "rgba(245,158,11,0.1)", borderBottom: "1px solid rgba(245,158,11,0.2)", padding: "0.5rem 1rem", display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }} onClick={() => {
+                        const pinned = messages.slice().reverse().find(m => m.isPinned && m.fileType === "formation");
+                        if (pinned) setOpenFormation(pinned.fileUrl);
+                    }}>
+                      <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#f59e0b", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem", flexShrink: 0 }}>📌</div>
+                      <div style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                         <span style={{ fontWeight: 800, color: "#fcd34d", fontSize: "0.8rem", marginRight: "0.4rem" }}>Pinned Tactic:</span>
+                         <span style={{ fontSize: "0.8rem", color: "var(--theme-text)" }}>{messages.slice().reverse().find(m => m.isPinned)?.text || "Tactical formation shared"}</span>
+                      </div>
+                      <span style={{ fontSize: "0.7rem", color: "#f59e0b", fontWeight: 700, textTransform: "uppercase" }}>View</span>
+                    </div>
+                  )}
+                  <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem", background: "var(--theme-surface-2)" }}>
+                    {messages.length === 0 && <div style={{ textAlign: "center", color: "var(--theme-muted)", fontSize: "0.85rem", marginTop: "auto", marginBottom: "auto" }}>This is the beginning of the message history.</div>}
 
                   {messages.map((msg, i) => {
                     const isMe = msg.sender?._id === user?._id;
@@ -471,21 +493,32 @@ export default function AthleteTeams() {
                              </div>
                          )}
                          <div style={{ 
+                            position: "relative",
                             background: isMe ? "var(--theme-primary)" : "var(--theme-surface)", 
                             color: isMe ? "#fff" : "var(--theme-text)",
                             padding: "0.9rem 1.2rem", 
                             borderRadius: isMe ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                            boxShadow: isMe ? "0 4px 15px rgba(249,115,22,0.3)" : "0 4px 15px rgba(0,0,0,0.05)",
-                            border: isMe ? "none" : "1px solid var(--theme-border)",
+                            boxShadow: msg.isPinned ? "0 0 0 2px #f59e0b, 0 12px 24px rgba(245,158,11,0.3)" : (isMe ? "0 4px 15px rgba(249,115,22,0.3)" : "0 4px 15px rgba(0,0,0,0.05)"),
+                            border: isMe && !msg.isPinned ? "none" : "1px solid var(--theme-border)",
                             lineHeight: 1.5,
                             fontSize: "0.95rem",
                             display: "flex",
                             flexDirection: "column",
                             gap: msg.fileUrl ? "0.6rem" : "0"
                          }}>
+                            {msg.isPinned && (
+                               <div style={{ position: "absolute", top: -10, right: isMe ? "auto" : -10, left: isMe ? -10 : "auto", background: "#f59e0b", color: "#fff", width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 10px rgba(245,158,11,0.5)", zIndex: 10 }}>
+                                 📌
+                               </div>
+                            )}
                             {/* File Attachment Rendering */}
                             {msg.fileUrl && (
-                                msg.fileType === "image" ? (
+                                msg.fileType === "formation" ? (
+                                  <div style={{ position: "relative" }}>
+                                    <FormationChatCard formationId={msg.fileUrl} isMe={isMe} portal="athlete" />
+                                    {/* Unlike coach, athletes cannot unpin by themselves so we just mirror coach logic or omit the button. Since athletes shouldn't pin anyway, we just render the pin banner, no pin toggle button */}
+                                  </div>
+                                ) : msg.fileType === "image" ? (
                                     <div style={{ borderRadius: 8, overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", maxWidth: 250, maxHeight: 250, cursor: "zoom-in", position: "relative" }} onClick={() => setLightboxImage(`${API}${msg.fileUrl}`)}
                                       onMouseEnter={e => e.currentTarget.querySelector('.img-overlay').style.opacity = '1'}
                                       onMouseLeave={e => e.currentTarget.querySelector('.img-overlay').style.opacity = '0'}
@@ -512,8 +545,9 @@ export default function AthleteTeams() {
                             </div>
                          </div>
                        </div>
-                    )
+                    );
                   })}
+                  </div>
                </div>
 
                {/* Chat Input */}

@@ -1,57 +1,60 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import AuthPage    from "./pages/AuthPage";
-import HomePage    from "./pages/HomePage";
-import AuthRoute   from "./routes/AuthRoute";
+import AuthPage from "./pages/AuthPage";
+import HomePage from "./pages/HomePage";
+import AuthRoute from "./routes/AuthRoute";
 import PublicRoute from "./routes/PublicRoute";
 
 // Club pages
-import ClubLayout       from "./pages/club/ClubLayout";
-import ClubDashboard    from "./pages/club/ClubDashboard";
-import ClubProfile      from "./pages/club/ClubProfile";
-import ClubMembers      from "./pages/club/ClubMembers";
+import ClubLayout from "./pages/club/ClubLayout";
+import ClubDashboard from "./pages/club/ClubDashboard";
+import ClubProfile from "./pages/club/ClubProfile";
+import ClubMembers from "./pages/club/ClubMembers";
 import ClubJoinRequests from "./pages/club/ClubJoinRequests";
-import ClubTeams        from "./pages/club/ClubTeams";
-import ClubPlaygrounds  from "./pages/club/ClubPlaygrounds";
+import ClubTeams from "./pages/club/ClubTeams";
+import ClubPlaygrounds from "./pages/club/ClubPlaygrounds";
 import ClubCompetitions from "./pages/club/ClubCompetitions";
-import ClubTalent       from "./pages/club/ClubTalent";
-import ClubBookings     from "./pages/club/ClubBookings";
-import ClubChat         from "./pages/club/ClubChat";
-import ClubFeed         from "./pages/club/ClubFeed";
+import ClubTalent from "./pages/club/ClubTalent";
+import ClubBookings from "./pages/club/ClubBookings";
+import ClubChat from "./pages/club/ClubChat";
+import ClubFeed from "./pages/club/ClubFeed";
 
 // Athlete pages
-import AthleteLayout    from "./pages/athlete/AthleteLayout";
+import AthleteLayout from "./pages/athlete/AthleteLayout";
 import AthleteDashboard from "./pages/athlete/AthleteDashboard";
-import AthleteProfile   from "./pages/athlete/AthleteProfile";
-import AthleteClubs     from "./pages/athlete/AthleteClubs";
-import AthleteRequests  from "./pages/athlete/AthleteRequests";
-import AthleteTeams       from "./pages/athlete/AthleteTeams";
+import AthleteProfile from "./pages/athlete/AthleteProfile";
+import AthleteClubs from "./pages/athlete/AthleteClubs";
+import AthleteRequests from "./pages/athlete/AthleteRequests";
+import AthleteTeams from "./pages/athlete/AthleteTeams";
 import AthletePlaygrounds from "./pages/athlete/AthletePlaygrounds";
-import AthleteBookings    from "./pages/athlete/AthleteBookings";
-import AthleteChat        from "./pages/athlete/AthleteChat";
-import AthleteFeed        from "./pages/athlete/AthleteFeed";
+import AthleteBookings from "./pages/athlete/AthleteBookings";
+import AthleteChat from "./pages/athlete/AthleteChat";
+import AthleteFeed from "./pages/athlete/AthleteFeed";
 import AthleteTournaments from "./pages/athlete/AthleteTournaments";
-import ClubTournaments    from "./pages/club/ClubTournaments";
-import AthleteTasks       from "./pages/athlete/AthleteTasks";
+import ClubTournaments from "./pages/club/ClubTournaments";
+import AthleteTasks from "./pages/athlete/AthleteTasks";
+import AthleteEvents from "./pages/athlete/AthleteEvents";
+import AthleteTactics from "./pages/athlete/AthleteTactics";
 
 // Coach pages
-import CoachLayout      from "./pages/coach/CoachLayout";
-import CoachDashboard   from "./pages/coach/CoachDashboard";
-import CoachProfile     from "./pages/coach/CoachProfile";
-import CoachClubs       from "./pages/coach/CoachClubs";
-import CoachTeams       from "./pages/coach/CoachTeams";
-import CoachRequests    from "./pages/coach/CoachRequests";
-import CoachTraining    from "./pages/coach/CoachTraining";
+import CoachLayout from "./pages/coach/CoachLayout";
+import CoachDashboard from "./pages/coach/CoachDashboard";
+import CoachProfile from "./pages/coach/CoachProfile";
+import CoachClubs from "./pages/coach/CoachClubs";
+import CoachTeams from "./pages/coach/CoachTeams";
+import CoachRequests from "./pages/coach/CoachRequests";
+import CoachTraining from "./pages/coach/CoachTraining";
 import CoachPerformance from "./pages/coach/CoachPerformance";
-import CoachEvents      from "./pages/coach/CoachEvents";
-import CoachAthletes    from "./pages/coach/CoachAthletes";
-import CoachTasks       from "./pages/coach/CoachTasks";
+import CoachEvents from "./pages/coach/CoachEvents";
+import CoachAthletes from "./pages/coach/CoachAthletes";
+import CoachTasks from "./pages/coach/CoachTasks";
+import TacticDetail from "./pages/TacticDetail";
 
 export default function App() {
   return (
     <Routes>
       {/* ── Public (unauthenticated only) ── */}
       <Route element={<PublicRoute />}>
-        <Route path="/login"  element={<AuthPage defaultMode="login"  />} />
+        <Route path="/login" element={<AuthPage defaultMode="login" />} />
         <Route path="/signup" element={<AuthPage defaultMode="signup" />} />
       </Route>
 
@@ -62,47 +65,51 @@ export default function App() {
         {/* Club dashboard – nested under sidebar layout */}
         <Route path="/club" element={<ClubLayout />}>
           <Route index element={<Navigate to="/club/dashboard" replace />} />
-          <Route path="dashboard"    element={<ClubDashboard    />} />
-          <Route path="profile"      element={<ClubProfile      />} />
-          <Route path="members"      element={<ClubMembers      />} />
-          <Route path="join-requests"element={<ClubJoinRequests />} />
-          <Route path="teams"        element={<ClubTeams        />} />
-          <Route path="playgrounds"  element={<ClubPlaygrounds  />} />
-          <Route path="bookings"     element={<ClubBookings     />} />
+          <Route path="dashboard" element={<ClubDashboard />} />
+          <Route path="profile" element={<ClubProfile />} />
+          <Route path="members" element={<ClubMembers />} />
+          <Route path="join-requests" element={<ClubJoinRequests />} />
+          <Route path="teams" element={<ClubTeams />} />
+          <Route path="playgrounds" element={<ClubPlaygrounds />} />
+          <Route path="bookings" element={<ClubBookings />} />
           <Route path="tournaments" element={<ClubTournaments />} />
-          <Route path="talent"       element={<ClubTalent       />} />
-          <Route path="chat"         element={<ClubChat         />} />
-          <Route path="feed"         element={<ClubFeed         />} />
+          <Route path="talent" element={<ClubTalent />} />
+          <Route path="chat" element={<ClubChat />} />
+          <Route path="feed" element={<ClubFeed />} />
         </Route>
 
         {/* Athlete dashboard – nested under sidebar layout */}
         <Route path="/athlete" element={<AthleteLayout />}>
           <Route index element={<Navigate to="/athlete/dashboard" replace />} />
           <Route path="dashboard" element={<AthleteDashboard />} />
-          <Route path="profile"   element={<AthleteProfile   />} />
-          <Route path="clubs"       element={<AthleteClubs       />} />
-          <Route path="teams"       element={<AthleteTeams       />} />
-          <Route path="requests"    element={<AthleteRequests    />} />
+          <Route path="profile" element={<AthleteProfile />} />
+          <Route path="clubs" element={<AthleteClubs />} />
+          <Route path="teams" element={<AthleteTeams />} />
+          <Route path="requests" element={<AthleteRequests />} />
           <Route path="playgrounds" element={<AthletePlaygrounds />} />
-          <Route path="bookings"    element={<AthleteBookings    />} />
-          <Route path="feed"        element={<AthleteFeed        />} />
+          <Route path="bookings" element={<AthleteBookings />} />
+          <Route path="feed" element={<AthleteFeed />} />
           <Route path="tournaments" element={<AthleteTournaments />} />
-          <Route path="tasks"       element={<AthleteTasks       />} />
+          <Route path="tasks" element={<AthleteTasks />} />
+          <Route path="events" element={<AthleteEvents />} />
+          <Route path="tactics" element={<AthleteTactics />} />
+          <Route path="tactics/:id" element={<TacticDetail />} />
         </Route>
 
         {/* Coach dashboard – nested under sidebar layout */}
         <Route path="/coach" element={<CoachLayout />}>
           <Route index element={<Navigate to="/coach/dashboard" replace />} />
-          <Route path="dashboard"   element={<CoachDashboard />} />
-          <Route path="profile"     element={<CoachProfile   />} />
-          <Route path="clubs"       element={<CoachClubs     />} />
-          <Route path="teams"       element={<CoachTeams     />} />
-          <Route path="requests"    element={<CoachRequests  />} />
-          <Route path="training"    element={<CoachTraining    />} />
+          <Route path="dashboard" element={<CoachDashboard />} />
+          <Route path="profile" element={<CoachProfile />} />
+          <Route path="clubs" element={<CoachClubs />} />
+          <Route path="teams" element={<CoachTeams />} />
+          <Route path="requests" element={<CoachRequests />} />
+          <Route path="training" element={<CoachTraining />} />
           <Route path="performance" element={<CoachPerformance />} />
-          <Route path="events"      element={<CoachEvents      />} />
-          <Route path="athletes"    element={<CoachAthletes    />} />
-          <Route path="tasks"       element={<CoachTasks       />} />
+          <Route path="events" element={<CoachEvents />} />
+          <Route path="athletes" element={<CoachAthletes />} />
+          <Route path="tasks" element={<CoachTasks />} />
+          <Route path="tactics/:id" element={<TacticDetail />} />
         </Route>
       </Route>
 

@@ -20,6 +20,7 @@ export const initializeSocket = (io) => {
                     clubGroup: data.clubGroup || null,
                     teamGroup: data.teamGroup || null,
                     tournamentGroup: data.tournamentGroup || null,
+                    formation: data.formation || null,
                     text: data.text || "",
                     fileUrl: data.fileUrl || null,
                     fileType: data.fileType || null

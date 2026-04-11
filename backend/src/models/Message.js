@@ -23,6 +23,10 @@ const messageSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "Tournament",
         },
+        formation: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Formation",
+        },
         text: {
             type: String,
             trim: true,
@@ -32,6 +36,10 @@ const messageSchema = new mongoose.Schema(
         },
         fileType: {
             type: String,
+        },
+        isPinned: {
+            type: Boolean,
+            default: false,
         },
     },
     {

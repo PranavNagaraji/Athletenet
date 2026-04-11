@@ -34,13 +34,16 @@ export default function AthleteFeed() {
     fetchMemberships();
   }, []);
 
+  const sortPostsLatest = (items = []) =>
+    [...items].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
   const fetchFeed = async () => {
     setLoading(true);
     try {
       const res = await fetch(`${API}/api/post/feed`, { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
-        setPosts(data);
+        setPosts(sortPostsLatest(Array.isArray(data) ? data : []));
       }
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
@@ -219,7 +222,7 @@ export default function AthleteFeed() {
 
       {/* Feed List */}
       {loading ? (
-        <div className="loading-state" style={{ marginTop: "4rem" }}><Loader2 size={36} className="spinner-icon" /> <span style={{ color: "var(--c-muted)" }}>Ranking feed by relevance...</span></div>
+        <div className="loading-state" style={{ marginTop: "4rem" }}><Loader2 size={36} className="spinner-icon" /> <span style={{ color: "var(--c-muted)" }}>Loading latest posts...</span></div>
       ) : posts.length === 0 ? (
         <div className="empty-state" style={{ background: "var(--theme-surface-3)", borderRadius: "16px", padding: "4rem 2rem" }}>
           <MessageSquare size={50} style={{ opacity: 0.3, marginBottom: "1rem" }} />

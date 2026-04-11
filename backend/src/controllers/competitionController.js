@@ -26,7 +26,8 @@ export const getMyCompetitions = async (req, res) => {
             .populate("matches.team1")
             .populate("matches.team2")
             .populate("playground")
-            .populate("createdBy");
+            .populate("createdBy")
+            .sort({ updatedAt: -1, createdAt: -1 });
 
         res.status(200).json(competitions);
     } catch (error) {

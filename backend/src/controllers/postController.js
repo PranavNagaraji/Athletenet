@@ -49,7 +49,8 @@ export const getFeed = async (req, res) => {
             .populate("author", "name profilePic")
             .populate({ path: "club", populate: { path: "admin", select: "name profilePic" } })
             .populate("team", "name")
-            .populate("comments.user", "name profilePic");
+            .populate("comments.user", "name profilePic")
+            .sort({ createdAt: -1, updatedAt: -1 });
 
         let userClubs = [];
         let userTeams = [];
@@ -73,8 +74,6 @@ export const getFeed = async (req, res) => {
         }
 
         const now = new Date();
-
-        // Algorithm: Score each post
         const scoredPosts = posts.map(post => {
             let score = 100; // Base score
             
@@ -125,7 +124,7 @@ export const getFeed = async (req, res) => {
                 trending: sp.finalScore > 150,
                 recommended: sp.post.team && userTeams.includes(sp.post.team._id.toString())
             };
-        });
+        }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         res.status(200).json(results);
 

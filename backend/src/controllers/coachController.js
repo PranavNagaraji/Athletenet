@@ -53,7 +53,9 @@ export const updateMyCoachProfile = async (req, res) => {
 
 export const getAllCoaches = async (req, res) => {
     try {
-        const coaches = await Coach.find().populate("user");
+        const coaches = await Coach.find()
+            .populate("user")
+            .sort({ updatedAt: -1, createdAt: -1 });
         res.status(200).json(coaches);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -65,7 +67,8 @@ export const getMyJoinRequest = async (req, res) => {
         const coach = await Coach.findOne({ user: req.user._id });
         if (!coach)
             return res.status(404).json({ message: "Coach profile not found" });
-        const joinRequests = await JoinRequest.find({ user: req.user._id });
+        const joinRequests = await JoinRequest.find({ user: req.user._id })
+            .sort({ createdAt: -1, updatedAt: -1 });
         res.status(200).json(joinRequests);
     } catch (error) {
         res.status(500).json({ message: error.message });

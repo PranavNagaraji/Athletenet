@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Bell, Check, CheckCheck, X, AlertCircle, UserCheck, Send } from "lucide-react";
+import { Bell, Check, CheckCheck, X, AlertCircle, UserCheck, Send, CalendarClock, Star } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const API = import.meta.env.VITE_BACKEND_URL;
@@ -19,7 +19,18 @@ function saveSeenIds(ids) {
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
-  const s = Math.floor(diff / 1000);
+  const absDiff = Math.abs(diff);
+  const s = Math.floor(absDiff / 1000);
+
+  if (diff < 0) {
+    if (s < 60) return "starting soon";
+    const m = Math.floor(s / 60);
+    if (m < 60) return `in ${m}m`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `in ${h}h`;
+    return `in ${Math.floor(h / 24)}d`;
+  }
+
   if (s < 60) return "just now";
   const m = Math.floor(s / 60);
   if (m < 60) return `${m}m ago`;
@@ -28,11 +39,67 @@ function timeAgo(dateStr) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+function buildEventNotifications(role, events) {
+  const now = Date.now();
+  const href = role === "coach" ? "/coach/events" : "/athlete/events";
+
+  return (Array.isArray(events) ? events : []).flatMap((event) => {
+    const eventTime = new Date(event.date).getTime();
+    const diffHours = (eventTime - now) / (1000 * 60 * 60);
+
+    if (diffHours < 0 || diffHours > 168) {
+      return [];
+    }
+
+    let idSuffix = "upcoming";
+    let title = "Upcoming Event";
+    let body = `${event.title} is on your schedule.`;
+    let urgent = false;
+
+    if (diffHours <= 2) {
+      idSuffix = "soon";
+      title = "Starting Soon";
+      body = `${event.title} starts within 2 hours.`;
+      urgent = true;
+    } else if (diffHours <= 24) {
+      idSuffix = "day";
+      title = "Event Reminder";
+      body = `${event.title} is coming up within the next 24 hours.`;
+      urgent = true;
+    } else {
+      body = `${event.title} is coming up on ${new Date(event.date).toLocaleDateString()}.`;
+    }
+
+    return [{
+      id: `event-${idSuffix}-${event._id}`,
+      icon: "calendar",
+      title,
+      body,
+      time: event.date,
+      href,
+      urgent,
+    }];
+  });
+}
+
+function buildPerformanceNotifications(ratings) {
+  return (Array.isArray(ratings) ? ratings : []).slice(0, 6).map((rating) => ({
+    id: `performance-${rating._id}`,
+    icon: "star",
+    title: "Performance Review Updated",
+    body: `${rating.coach?.name || "Your coach"} rated you ${Number(rating.overallScore || 0).toFixed(1)}/5.`,
+    time: rating.updatedAt || rating.createdAt,
+    href: "/athlete/profile",
+    urgent: Number(rating.overallScore || 0) >= 4,
+  }));
+}
+
 function buildNotifications(role, data) {
   const notifications = [];
+  const now = Date.now();
 
   if (role === "club") {
-    const requests = Array.isArray(data) ? data : [];
+    const requests = Array.isArray(data?.requests) ? data.requests : [];
     const pending = requests.filter((r) => r.status === "pending");
     const recent = requests.slice(0, 8);
 
@@ -63,8 +130,7 @@ function buildNotifications(role, data) {
         });
       });
   } else {
-    // athlete / coach
-    const requests = Array.isArray(data) ? data : [];
+    const requests = Array.isArray(data?.requests) ? data.requests : [];
     requests.slice(0, 8).forEach((r) => {
       if (r.status === "pending") {
         notifications.push({
@@ -88,9 +154,24 @@ function buildNotifications(role, data) {
         });
       }
     });
+
+    notifications.push(...buildEventNotifications(role, data?.events));
+
+    if (role === "athlete") {
+      notifications.push(...buildPerformanceNotifications(data?.performance));
+    }
   }
 
-  return notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
+  return notifications.sort((a, b) => {
+    const aTime = new Date(a.time).getTime();
+    const bTime = new Date(b.time).getTime();
+    const aFuture = aTime > now;
+    const bFuture = bTime > now;
+
+    if (aFuture && bFuture) return aTime - bTime;
+    if (!aFuture && !bFuture) return bTime - aTime;
+    return aFuture ? -1 : 1;
+  });
 }
 
 const IconMap = {
@@ -98,6 +179,8 @@ const IconMap = {
   check: <Check size={14} />,
   send: <Send size={14} />,
   alert: <AlertCircle size={14} />,
+  calendar: <CalendarClock size={14} />,
+  star: <Star size={14} />,
 };
 
 export default function NotificationBell({ role }) {
@@ -110,16 +193,51 @@ export default function NotificationBell({ role }) {
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
     try {
-      let url = "";
-      if (role === "club") url = `${API}/api/join-request/all-requests`;
-      else if (role === "athlete") url = `${API}/api/athlete/join-requests`;
-      else if (role === "coach") url = `${API}/api/coach/join-request`;
+      if (role === "club") {
+        const res = await fetch(`${API}/api/join-request/all-requests`, { credentials: "include" });
+        if (!res.ok) return;
+        const data = await res.json();
+        setNotifications(buildNotifications(role, { requests: Array.isArray(data) ? data : [] }));
+        return;
+      }
 
-      const res = await fetch(url, { credentials: "include" });
-      if (!res.ok) return;
-      const data = await res.json();
-      const list = Array.isArray(data) ? data : [];
-      setNotifications(buildNotifications(role, list));
+      if (role === "athlete") {
+        const [requestsRes, eventsRes, performanceRes] = await Promise.all([
+          fetch(`${API}/api/athlete/join-requests`, { credentials: "include" }),
+          fetch(`${API}/api/athlete/events`, { credentials: "include" }),
+          fetch(`${API}/api/athlete/performance`, { credentials: "include" }),
+        ]);
+
+        const [requestsData, eventsData, performanceData] = await Promise.all([
+          requestsRes.ok ? requestsRes.json() : [],
+          eventsRes.ok ? eventsRes.json() : [],
+          performanceRes.ok ? performanceRes.json() : [],
+        ]);
+
+        setNotifications(buildNotifications(role, {
+          requests: Array.isArray(requestsData) ? requestsData : [],
+          events: Array.isArray(eventsData) ? eventsData : [],
+          performance: Array.isArray(performanceData) ? performanceData : [],
+        }));
+        return;
+      }
+
+      if (role === "coach") {
+        const [requestsRes, eventsRes] = await Promise.all([
+          fetch(`${API}/api/coach/join-request`, { credentials: "include" }),
+          fetch(`${API}/api/coach/events`, { credentials: "include" }),
+        ]);
+
+        const [requestsData, eventsData] = await Promise.all([
+          requestsRes.ok ? requestsRes.json() : [],
+          eventsRes.ok ? eventsRes.json() : [],
+        ]);
+
+        setNotifications(buildNotifications(role, {
+          requests: Array.isArray(requestsData) ? requestsData : [],
+          events: Array.isArray(eventsData) ? eventsData : [],
+        }));
+      }
     } catch {
       // silently fail
     }

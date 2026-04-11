@@ -25,16 +25,22 @@ export default function AthleteDashboard() {
   const { user } = useAuth();
   const [athleteData, setAthleteData] = useState(null);
   const [requests, setRequests] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [performanceRatings, setPerformanceRatings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       fetch(`${API}/api/athlete/me`, { credentials: "include" }).then((r) => r.json()),
       fetch(`${API}/api/athlete/join-requests`, { credentials: "include" }).then((r) => r.json()),
+      fetch(`${API}/api/athlete/events`, { credentials: "include" }).then((r) => r.ok ? r.json() : []),
+      fetch(`${API}/api/athlete/performance`, { credentials: "include" }).then((r) => r.ok ? r.json() : []),
     ])
-      .then(([athleteRes, requestsRes]) => {
+      .then(([athleteRes, requestsRes, eventsRes, performanceRes]) => {
         setAthleteData(athleteRes);
         setRequests(Array.isArray(requestsRes) ? requestsRes : []);
+        setEvents(Array.isArray(eventsRes) ? eventsRes : []);
+        setPerformanceRatings(Array.isArray(performanceRes) ? performanceRes : []);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -43,12 +49,14 @@ export default function AthleteDashboard() {
   const joinedClubs = athleteData?.clubs?.length || 0;
   const pendingRequests = requests.filter((r) => r.status === "pending").length;
   const mySports = athleteData?.user?.sports?.length || 0;
+  const upcomingEvents = events.filter((eventItem) => new Date(eventItem.date) >= new Date()).length;
+  const latestRating = performanceRatings[0]?.overallScore ? Number(performanceRatings[0].overallScore).toFixed(1) : "--";
 
   const statCards = [
     { icon: Building2, label: "Joined Clubs", value: joinedClubs, to: "/athlete/clubs", color: "#f97316" },
     { icon: Send, label: "Pending Requests", value: pendingRequests, to: "/athlete/requests", color: "#f59e0b" },
     { icon: Trophy, label: "My Sports", value: mySports, to: "/athlete/profile", color: "#3b82f6" },
-    { icon: MessageSquare, label: "Teams", value: 0, to: "/athlete/teams", color: "#10b981" },
+    { icon: CalendarClock, label: "Upcoming Events", value: upcomingEvents, to: "/athlete/events", color: "#10b981" },
   ];
 
   const displayName = athleteData?.user?.name || user?.name || "Athlete";
@@ -57,6 +65,7 @@ export default function AthleteDashboard() {
     { icon: Compass, title: "Browse Clubs", copy: "Find clubs that match your sport and goals.", to: "/athlete/clubs" },
     { icon: Activity, title: "Social Feed", copy: "Stay updated with your clubs and community.", to: "/athlete/feed" },
     { icon: Trophy, title: "Tournaments", copy: "Check upcoming events and competitions.", to: "/athlete/tournaments" },
+    { icon: CalendarClock, title: "Coach Events", copy: `Track matches, camps, and reminders. Latest rating: ${latestRating}/5.`, to: "/athlete/events" },
     { icon: MapPin, title: "Book Turf", copy: "Find and reserve training facilities nearby.", to: "/athlete/playgrounds" },
     { icon: CalendarClock, title: "My Bookings", copy: "View and manage your upcoming sessions.", to: "/athlete/bookings" },
     { icon: Send, title: "My Requests", copy: "Track all your club join applications.", to: "/athlete/requests" },

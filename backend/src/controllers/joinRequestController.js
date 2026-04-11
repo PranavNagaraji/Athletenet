@@ -41,7 +41,10 @@ export const getAllJoinRequests = async (req, res) => {
     try {
         const club = await Club.findOne({ admin: req.user._id });
         if (!club) return res.status(404).json({ message: "Club not found" });
-        const joinRequests = await JoinRequest.find({ club: club._id }).populate("user").populate("club");
+        const joinRequests = await JoinRequest.find({ club: club._id })
+            .populate("user")
+            .populate("club")
+            .sort({ createdAt: -1, updatedAt: -1 });
         return res.status(200).json(joinRequests);
     } catch (error) {
         return res.status(500).json({ message: error.message });
@@ -56,7 +59,8 @@ export const getAthleteJoinRequests = async (req, res) => {
             .populate({
                 path: "user",
                 match: { role: "athlete" }
-            }).populate("club");
+            }).populate("club")
+            .sort({ createdAt: -1, updatedAt: -1 });
         const athleteRequests = joinRequests.filter(req => req.user && req.user.role === "athlete")
         return res.status(200).json({ athleteRequests });
     } catch (error) {
@@ -72,7 +76,8 @@ export const getCoachJoinRequests = async (req, res) => {
             .populate({
                 path: "user",
                 match: { role: "coach" }
-            }).populate("club");
+            }).populate("club")
+            .sort({ createdAt: -1, updatedAt: -1 });
         const coachRequests = joinRequests.filter(req => req.user && req.user.role === "coach")
         return res.status(200).json({ coachRequests });
     } catch (error) {

@@ -35,7 +35,7 @@ export const getNearbyPlaygrounds = async (req, res) => {
                     $maxDistance: parseInt(distance) // meters
                 }
             }
-        });
+        }).sort({ updatedAt: -1, createdAt: -1 });
 
         res.status(200).json(playgrounds);
 

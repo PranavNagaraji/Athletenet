@@ -106,7 +106,10 @@ export const getAllTeamsByClub = async (req, res) => {
         const id = req.params.clubId;
         const club = await Club.findOne({ $or: [{ _id: mongoose.Types.ObjectId.isValid(id) ? id : null }, { admin: mongoose.Types.ObjectId.isValid(id) ? id : null }] });
         if (!club) return res.status(404).json({ message: "Club not found" });
-        const teams = await Team.find({ club: club._id }).populate("athletes", "name profilePic").populate("coaches", "name profilePic");
+        const teams = await Team.find({ club: club._id })
+            .populate("athletes", "name profilePic")
+            .populate("coaches", "name profilePic")
+            .sort({ updatedAt: -1, createdAt: -1 });
         res.status(200).json(teams);
     } catch (error) {
         res.status(500).json({ message: error.message });

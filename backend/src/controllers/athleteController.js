@@ -43,7 +43,8 @@ export const updateMyProfile = async (req, res) => {
 
 export const getNearbyClubs = async (req, res) => {
     try {
-        const clubs = await Club.find({}); //use geo filter here
+        const clubs = await Club.find({})
+            .sort({ updatedAt: -1, createdAt: -1 }); //use geo filter here
         res.status(200).json(clubs);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -54,7 +55,8 @@ export const getMyJoinRequests = async (req, res) => {
     try {
         const athlete = await Athlete.findOne({ user: req.user._id });
         if (!athlete) return res.status(404).json({ message: "Athlete not found" });
-        const joinRequests = await JoinRequest.find({ user: req.user._id });
+        const joinRequests = await JoinRequest.find({ user: req.user._id })
+            .sort({ createdAt: -1, updatedAt: -1 });
         res.status(200).json(joinRequests);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -74,7 +76,9 @@ export const getMyJoinRequests = async (req, res) => {
 
 export const getAllAthletes = async (req, res) => {
     try {
-        const athletes = await Athlete.find().populate("user");
+        const athletes = await Athlete.find()
+            .populate("user")
+            .sort({ updatedAt: -1, createdAt: -1 });
         res.status(200).json(athletes);
     } catch (error) {
         res.status(500).json({ message: error.message });

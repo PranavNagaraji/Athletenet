@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import {
   LayoutDashboard, UserRound, Compass, Send, LogOut,
   ChevronRight, Activity, MessageSquare, MapPin, CalendarClock,
-  Trophy, Menu, X, ClipboardList
+  Trophy, Menu, X, ClipboardList, Flag
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import ThemeToggle from "../../components/ThemeToggle";
@@ -24,7 +24,9 @@ const navGroups = [
     label: "Competition",
     items: [
       { to: "/athlete/tournaments", icon: Trophy, label: "Tournaments" },
+      { to: "/athlete/events", icon: Flag, label: "Matches & Events" },
       { to: "/athlete/teams", icon: MessageSquare, label: "Messenger & Teams" },
+      { to: "/athlete/tactics", icon: Compass, label: "Tactics" },
     ],
   },
   {

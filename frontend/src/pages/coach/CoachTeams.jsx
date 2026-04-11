@@ -1,11 +1,22 @@
 import { useEffect, useState, useRef } from "react";
-import { Users, UserPlus, Loader2, Trophy, MessageSquare, Send, Paperclip, FileText, Image as ImageIcon, MapPin } from "lucide-react";
+import { Users, UserPlus, Loader2, Trophy, MessageSquare, Send, Paperclip, FileText, Image as ImageIcon, MapPin, Crosshair } from "lucide-react";
 import { io } from "socket.io-client";
 import { useAuth } from "../../context/AuthContext";
 import { VALIDATION_LIMITS, validateFile } from "../../utils/formValidation";
+import FormationsBoard from "../../components/FormationsBoard";
+import FormationChatCard from "../../components/FormationChatCard";
 import "../club/ClubLayout.css";
 
 const API = import.meta.env.VITE_BACKEND_URL;
+
+const SPORT_BG_MINI = {
+  football: "linear-gradient(135deg, #166534, #15803d)",
+  basketball: "linear-gradient(135deg, #7c2d12, #9a3412)",
+  cricket: "linear-gradient(135deg, #1e3a5f, #1e40af)",
+};
+const SPORT_ACCENT = { football: "#22c55e", basketball: "#f97316", cricket: "#38bdf8" };
+
+
 
 const getInitials = (name = "") =>
   name
@@ -98,6 +109,7 @@ export default function CoachTeams() {
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(null);
   const [coachUserId, setCoachUserId] = useState(null);
+  const [showTacticsBoard, setShowTacticsBoard] = useState(false);
 
   const scrollRef = useRef();
   const fileInputRef = useRef();
@@ -428,8 +440,22 @@ export default function CoachTeams() {
                   </div>
                 </div>
 
-                <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem", background: "linear-gradient(180deg, var(--theme-surface-2) 0%, color-mix(in srgb, var(--theme-surface-2) 82%, var(--theme-bg) 18%) 100%)" }}>
-                  {messages.length === 0 && <div style={{ textAlign: "center", color: "var(--theme-muted)", fontSize: "0.85rem", marginTop: "auto", marginBottom: "auto" }}>This is the beginning of the message history.</div>}
+                <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
+                  {messages.some(m => m.isPinned) && (
+                    <div style={{ background: "rgba(245,158,11,0.1)", borderBottom: "1px solid rgba(245,158,11,0.2)", padding: "0.5rem 1rem", display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }} onClick={() => {
+                        const pinned = messages.slice().reverse().find(m => m.isPinned && m.fileType === "formation");
+                        if (pinned) setOpenFormation(pinned.fileUrl);
+                    }}>
+                      <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#f59e0b", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem", flexShrink: 0 }}>📌</div>
+                      <div style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                         <span style={{ fontWeight: 800, color: "#fcd34d", fontSize: "0.8rem", marginRight: "0.4rem" }}>Pinned Tactic:</span>
+                         <span style={{ fontSize: "0.8rem", color: "var(--theme-text)" }}>{messages.slice().reverse().find(m => m.isPinned)?.text || "Tactical formation shared"}</span>
+                      </div>
+                      <span style={{ fontSize: "0.7rem", color: "#f59e0b", fontWeight: 700, textTransform: "uppercase" }}>View</span>
+                    </div>
+                  )}
+                  <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem", background: "linear-gradient(180deg, var(--theme-surface-2) 0%, color-mix(in srgb, var(--theme-surface-2) 82%, var(--theme-bg) 18%) 100%)" }}>
+                    {messages.length === 0 && <div style={{ textAlign: "center", color: "var(--theme-muted)", fontSize: "0.85rem", marginTop: "auto", marginBottom: "auto" }}>This is the beginning of the message history.</div>}
 
                   {messages.map((msg, i) => {
                     const isMe = msg.sender?._id === user?._id;
@@ -443,9 +469,28 @@ export default function CoachTeams() {
                           </div>
                         )}
 
-                        <div style={{ background: isMe ? "linear-gradient(135deg, var(--theme-primary), var(--theme-primary-dark))" : "var(--theme-surface)", color: isMe ? "#fff" : "var(--theme-text)", padding: "0.9rem 1rem", borderRadius: isMe ? "18px 18px 4px 18px" : "18px 18px 18px 4px", boxShadow: isMe ? "0 12px 24px rgba(249,115,22,0.25)" : "0 10px 24px rgba(15, 23, 42, 0.08)", border: isMe ? "none" : "1px solid var(--theme-border)", lineHeight: 1.5, fontSize: "0.95rem", display: "flex", flexDirection: "column", gap: msg.fileUrl ? "0.55rem" : "0" }}>
+                        <div style={{ position: "relative", background: isMe ? "linear-gradient(135deg, var(--theme-primary), var(--theme-primary-dark))" : "var(--theme-surface)", color: isMe ? "#fff" : "var(--theme-text)", padding: "0.9rem 1rem", borderRadius: isMe ? "18px 18px 4px 18px" : "18px 18px 18px 4px", boxShadow: msg.isPinned ? "0 0 0 2px #f59e0b, 0 12px 24px rgba(245,158,11,0.3)" : (isMe ? "0 12px 24px rgba(249,115,22,0.25)" : "0 10px 24px rgba(15, 23, 42, 0.08)"), border: isMe && !msg.isPinned ? "none" : "1px solid var(--theme-border)", lineHeight: 1.5, fontSize: "0.95rem", display: "flex", flexDirection: "column", gap: msg.fileUrl ? "0.55rem" : "0" }}>
+                          {msg.isPinned && (
+                             <div style={{ position: "absolute", top: -10, right: isMe ? "auto" : -10, left: isMe ? -10 : "auto", background: "#f59e0b", color: "#fff", width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 10px rgba(245,158,11,0.5)", zIndex: 10 }}>
+                               📌
+                             </div>
+                          )}
                           {msg.fileUrl && (
-                            msg.fileType === "image" ? (
+                            msg.fileType === "formation" ? (
+                              <div style={{ position: "relative" }}>
+                                <FormationChatCard formationId={msg.fileUrl} isMe={isMe} portal="coach" />
+                                <button 
+                                  onClick={async () => {
+                                    await fetch(`${API}/api/chat/message/${msg._id}/pin`, { method: "PUT", credentials: "include" });
+                                    setMessages(prev => prev.map(m => m._id === msg._id ? { ...m, isPinned: !m.isPinned } : m));
+                                  }}
+                                  style={{ position: "absolute", top: 8, right: 8, background: msg.isPinned ? "#f59e0b" : "rgba(0,0,0,0.5)", border: "none", borderRadius: "50%", width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff", transition: "all 0.2s", backdropFilter: "blur(4px)" }}
+                                  title={msg.isPinned ? "Unpin Tactic" : "Pin Tactic"}
+                                >
+                                  📌
+                                </button>
+                              </div>
+                            ) : msg.fileType === "image" ? (
                               <div
                                 style={{ borderRadius: 10, overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", maxWidth: 250, maxHeight: 250, cursor: "zoom-in", position: "relative" }}
                                 onClick={() => setLightboxImage(`${API}${msg.fileUrl}`)}
@@ -483,11 +528,13 @@ export default function CoachTeams() {
                       </div>
                     );
                   })}
+                  </div>
                 </div>
 
                 <div style={{ position: "relative" }}>
                   {showAttachMenu && (
                     <div style={{ position: "absolute", bottom: "100%", left: "1rem", marginBottom: "0.5rem", background: "var(--theme-surface)", border: "1px solid var(--theme-border)", borderRadius: "14px", boxShadow: "0 20px 50px rgba(15, 23, 42, 0.16)", display: "flex", flexDirection: "column", padding: "0.5rem", zIndex: 100 }}>
+                  {/* Image/document upload */}
                       <button type="button" onClick={() => { setShowAttachMenu(false); fileInputRef.current?.click(); }} style={{ display: "flex", alignItems: "center", gap: "0.8rem", padding: "0.6rem 1.2rem", background: "transparent", border: "none", color: "var(--theme-text)", cursor: "pointer", borderRadius: "10px", textAlign: "left" }} onMouseEnter={(e) => e.currentTarget.style.background = "var(--theme-surface-2)"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
                         <div style={{ background: "linear-gradient(135deg, #a855f7, #6d28d9)", width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", boxShadow: "0 4px 10px rgba(109,40,217,0.3)" }}>
                           <ImageIcon size={18} />
@@ -495,11 +542,19 @@ export default function CoachTeams() {
                         <span style={{ fontWeight: 700, fontSize: "0.9rem" }}>Gallery / Document</span>
                       </button>
 
-                      <button type="button" onClick={handleAttachLocation} style={{ display: "flex", alignItems: "center", gap: "0.8rem", padding: "0.6rem 1.2rem", background: "transparent", border: "none", color: "var(--theme-text)", cursor: "pointer", borderRadius: "10px", textAlign: "left" }} onMouseEnter={(e) => e.currentTarget.style.background = "var(--theme-surface-2)"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
+                      <button type="button" onClick={() => { setShowAttachMenu(false); handleAttachLocation(); }} style={{ display: "flex", alignItems: "center", gap: "0.8rem", padding: "0.6rem 1.2rem", background: "transparent", border: "none", color: "var(--theme-text)", cursor: "pointer", borderRadius: "10px", textAlign: "left" }} onMouseEnter={(e) => e.currentTarget.style.background = "var(--theme-surface-2)"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
                         <div style={{ background: "linear-gradient(135deg, #10b981, #047857)", width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", boxShadow: "0 4px 10px rgba(4,120,87,0.3)" }}>
                           <MapPin size={18} />
                         </div>
                         <span style={{ fontWeight: 700, fontSize: "0.9rem" }}>Location</span>
+                      </button>
+
+                      {/* Tactic Option */}
+                      <button type="button" onClick={() => { setShowAttachMenu(false); setShowTacticsBoard(true); }} style={{ display: "flex", alignItems: "center", gap: "0.8rem", padding: "0.6rem 1.2rem", background: "transparent", border: "none", color: "var(--theme-text)", cursor: "pointer", borderRadius: "10px", textAlign: "left" }} onMouseEnter={(e) => e.currentTarget.style.background = "var(--theme-surface-2)"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
+                        <div style={{ background: "linear-gradient(135deg, #22c55e, #15803d)", width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", boxShadow: "0 4px 10px rgba(34,197,94,0.4)" }}>
+                          <Crosshair size={18} />
+                        </div>
+                        <span style={{ fontWeight: 700, fontSize: "0.9rem" }}>Share Tactic</span>
                       </button>
                     </div>
                   )}
@@ -529,6 +584,59 @@ export default function CoachTeams() {
           </div>
         </div>
       </div>
+
+      {/* ── Tactics Board overlay (coach editable) ── */}
+      {showTacticsBoard && activeView?.type === "team_chat" && (
+        <FormationsBoard
+          readOnly={false}
+          onClose={() => setShowTacticsBoard(false)}
+          onSave={async (formation) => {
+            try {
+              const method = formation._id ? "PUT" : "POST";
+              const url = formation._id ? `${API}/api/formations/${formation._id}` : `${API}/api/formations`;
+              const res = await fetch(url, {
+                method,
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ...formation, teamId: activeView.id }),
+              });
+              if (res.ok) {
+                alert("Tactics saved successfully!");
+              }
+            } catch (err) {
+              console.error("Formation save error", err);
+            }
+          }}
+          onShare={async (formation) => {
+            try {
+              const res = await fetch(`${API}/api/formations`, {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ...formation, teamId: activeView.id }),
+              });
+              const data = await res.json();
+              if (res.ok && data._id) {
+                const roomName = `team_${activeView.id}`;
+                socket.emit("send_message", {
+                  room: roomName,
+                  sender: user._id,
+                  text: `📋 Shared a tactic: ${data.name}`,
+                  teamGroup: activeView.id,
+                  formation: data._id,
+                  fileUrl: data._id,
+                  fileType: "formation",
+                });
+                setShowTacticsBoard(false);
+              }
+            } catch (err) {
+              console.error("Formation share error", err);
+            }
+          }}
+        />
+      )}
+
+      )}
     </>
   );
 }

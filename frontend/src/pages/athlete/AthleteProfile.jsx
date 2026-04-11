@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Save, Loader2, UserRound, AlertCircle, Building2, Send, Users, Compass, X, Plus, Edit3 } from "lucide-react";
+import { Save, Loader2, UserRound, AlertCircle, Building2, Send, Users, Compass, X, Plus, Edit3, Star } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
@@ -33,6 +33,7 @@ export default function AthleteProfile() {
   // Note: bio/location is part of User, age/height/weight/sports are Athlete
   const [form, setForm]     = useState({ height: "", weight: "", age: "", bio: "", sports: [], name: "", profilePic: "", location: { name: "", latitude: 0, longitude: 0 } });
   const [requests, setRequests] = useState([]);
+  const [performanceRatings, setPerformanceRatings] = useState([]);
   const [athleteData, setAthleteData] = useState(null);
   
   const [loading, setLoading] = useState(true);
@@ -46,11 +47,13 @@ export default function AthleteProfile() {
   useEffect(() => {
     Promise.all([
       fetch(`${API}/api/athlete/me`, { credentials: "include" }).then(r => r.json()),
-      fetch(`${API}/api/athlete/join-requests`, { credentials: "include" }).then(r => r.json())
+      fetch(`${API}/api/athlete/join-requests`, { credentials: "include" }).then(r => r.json()),
+      fetch(`${API}/api/athlete/performance`, { credentials: "include" }).then(r => r.ok ? r.json() : [])
     ])
-    .then(([d, reqData]) => {
+    .then(([d, reqData, ratingData]) => {
       setAthleteData(d);
       setRequests(Array.isArray(reqData) ? reqData : []);
+      setPerformanceRatings(Array.isArray(ratingData) ? ratingData : []);
       
       setForm({
         age: d.age || "", height: d.height || "", weight: d.weight || "",
@@ -160,6 +163,8 @@ export default function AthleteProfile() {
 
   const pendingCount = requests.filter(r => r.status === "pending").length;
   const joinedClubsCount = athleteData?.clubs?.length || 0;
+  const latestPerformance = performanceRatings[0] || null;
+  const latestPerformanceAverage = latestPerformance?.overallScore ? Number(latestPerformance.overallScore).toFixed(1) : "--";
   const profileCompletion = [form.name, form.bio, form.age, form.height, form.weight, form.location?.name, form.sports.length > 0 ? "sports" : ""].filter(Boolean).length;
   const profileCompletionPercent = Math.round((profileCompletion / 7) * 100);
 
@@ -266,11 +271,11 @@ export default function AthleteProfile() {
 
           <div className="stat-card">
             <div className="stat-icon" style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.15), rgba(59,130,246,0.05))", color: "#3b82f6" }}>
-              <Users size={20} />
+              <Star size={20} />
             </div>
             <div className="stat-info">
-              <span className="stat-value">0</span>
-              <span className="stat-label">My Teams</span>
+              <span className="stat-value">{latestPerformanceAverage}</span>
+              <span className="stat-label">Latest Rating</span>
             </div>
           </div>
         </div>
@@ -501,6 +506,75 @@ export default function AthleteProfile() {
 
             </div>
         )}
+
+        <div className="card" style={{ marginBottom: "2rem" }}>
+          <div className="card-title" style={{ borderBottom: "1px solid var(--theme-border)", paddingBottom: "1rem", marginBottom: "1rem" }}>
+            <Star size={18} /> Coach Performance Reviews
+          </div>
+          {performanceRatings.length === 0 ? (
+            <div className="empty-state" style={{ padding: "3rem 1rem", background: "transparent", border: "1px dashed var(--theme-border-strong)" }}>
+              <Star size={32} opacity={0.5} />
+              <p>Your coach ratings and notes will appear here once a review is saved.</p>
+            </div>
+          ) : (
+            <div className="stack-md">
+              {performanceRatings.map((rating) => (
+                <div
+                  key={rating._id}
+                  style={{
+                    border: "1px solid var(--theme-border)",
+                    borderRadius: "16px",
+                    padding: "1rem 1.1rem",
+                    background: "linear-gradient(180deg, var(--theme-surface-2) 0%, color-mix(in srgb, var(--theme-surface-2) 92%, var(--theme-surface) 8%) 100%)",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", alignItems: "flex-start", flexWrap: "wrap" }}>
+                    <div>
+                      <div style={{ fontWeight: 800, color: "var(--theme-text)" }}>
+                        {rating.coach?.name || "Coach"}{rating.team?.name ? ` · ${rating.team.name}` : ""}
+                      </div>
+                      <div style={{ marginTop: "0.25rem", fontSize: "0.8rem", color: "var(--theme-muted)" }}>
+                        Updated {new Date(rating.updatedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        padding: "0.45rem 0.75rem",
+                        borderRadius: "999px",
+                        background: "color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface))",
+                        border: "1px solid color-mix(in srgb, var(--theme-primary) 25%, var(--theme-border))",
+                        color: "var(--theme-primary)",
+                        fontWeight: 800,
+                      }}
+                    >
+                      {Number(rating.overallScore || 0).toFixed(1)} / 5
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "0.7rem", marginTop: "0.9rem" }}>
+                    {Object.entries(rating.scores || {}).map(([key, value]) => (
+                      <div key={key} style={{ padding: "0.7rem 0.8rem", borderRadius: "12px", background: "var(--theme-surface)", border: "1px solid var(--theme-border)" }}>
+                        <div style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--theme-muted)", fontWeight: 700 }}>
+                          {key}
+                        </div>
+                        <div style={{ marginTop: "0.2rem", fontWeight: 800, color: "var(--theme-text)" }}>{value || 0} / 5</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {rating.note ? (
+                    <div style={{ marginTop: "0.9rem", padding: "0.9rem 1rem", borderRadius: "14px", background: "var(--theme-surface)", border: "1px solid var(--theme-border)" }}>
+                      <div style={{ fontSize: "0.75rem", color: "var(--theme-primary)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 800, marginBottom: "0.35rem" }}>
+                        Coach Note
+                      </div>
+                      <p style={{ margin: 0, color: "var(--theme-text)", lineHeight: 1.65 }}>{rating.note}</p>
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* --- RECENT JOIN REQUESTS SECTION --- */}
         <div className="card">
