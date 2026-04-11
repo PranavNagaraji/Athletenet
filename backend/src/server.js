@@ -43,10 +43,11 @@ initializeSocket(io);
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({
-  origin: process.env.FRONTENDURL,
-  credentials: true
-}))
+// app.use(cors({
+//   origin: process.env.FRONTENDURL,
+//   credentials: true
+// }))
+app.use(cors());
 
 app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);
