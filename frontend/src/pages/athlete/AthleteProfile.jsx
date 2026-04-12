@@ -32,6 +32,7 @@ export default function AthleteProfile() {
   
   // Note: bio/location is part of User, age/height/weight/sports are Athlete
   const [form, setForm]     = useState({ height: "", weight: "", age: "", bio: "", sports: [], name: "", profilePic: "", location: { name: "", latitude: 0, longitude: 0 } });
+  const [savedForm, setSavedForm] = useState(null);
   const [requests, setRequests] = useState([]);
   const [performanceRatings, setPerformanceRatings] = useState([]);
   const [athleteData, setAthleteData] = useState(null);
@@ -55,12 +56,14 @@ export default function AthleteProfile() {
       setRequests(Array.isArray(reqData) ? reqData : []);
       setPerformanceRatings(Array.isArray(ratingData) ? ratingData : []);
       
-      setForm({
+      const loadedForm = {
         age: d.age || "", height: d.height || "", weight: d.weight || "",
         sports: d.user?.sports || [],
         bio: d.user?.bio || "", name: d.user?.name || user?.name || "", profilePic: d.user?.profilePic || user?.profilePic || "",
         location: d.user?.location || { name: "", latitude: 0, longitude: 0 }
-      });
+      };
+      setForm(loadedForm);
+      setSavedForm(loadedForm);
     })
     .catch(console.error)
     .finally(() => setLoading(false));
@@ -79,8 +82,30 @@ export default function AthleteProfile() {
     try {
       const res = await fetch(`${API}/api/upload`, { method: "POST", body: fd });
       const data = await res.json();
-      if (data.success) setForm(f => ({ ...f, profilePic: data.url }));
-      else setMsg({ type: "error", text: data.message });
+      if (data.success) {
+        // Update form state immediately for preview
+        setForm(f => ({ ...f, profilePic: data.url }));
+        
+        // Immediately save to user profile to persist on reload
+        const profileRes = await fetch(`${API}/api/user/profile`, {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profilePic: data.url }),
+        });
+        
+        if (profileRes.ok) {
+          setMsg({ type: "success", text: "Profile photo updated successfully!" });
+          // Update saved form to reflect saved state
+          setSavedForm(f => ({ ...f, profilePic: data.url }));
+          // Refresh auth context to update user data
+          checkAuth();
+        } else {
+          setMsg({ type: "error", text: "Photo uploaded but failed to save. Try saving profile manually." });
+        }
+      } else {
+        setMsg({ type: "error", text: data.message });
+      }
     } catch { setMsg({ type: "error", text: "Upload failed" }); }
     finally { setUploading(false); }
   };
@@ -118,9 +143,10 @@ export default function AthleteProfile() {
         })
       ]);
       if (resAth.ok && resUser.ok) {
+        setSavedForm({ ...form });
+        setIsEditing(false); // return to view mode on success
         setMsg({ type: "success", text: "Profile updated successfully!" });
         checkAuth(); // update Context
-        setIsEditing(false); // return to view mode on success
       } else setMsg({ type: "error", text: "Failed to update profile." });
     } catch { setMsg({ type: "error", text: "Network error." }); }
     finally { setSaving(false); }
@@ -135,27 +161,232 @@ export default function AthleteProfile() {
     }
   };
 
-  const handleFetchLocation = () => {
+  const handleFetchLocation = async () => {
     if (!navigator.geolocation) return setMsg({ type: "error", text: "Geolocation is not supported by your browser." });
+    
+    setMsg({ type: "info", text: "Getting your location..." });
+    
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setForm(f => ({ ...f, location: { ...f.location, latitude: pos.coords.latitude, longitude: pos.coords.longitude } }));
-        setMsg({ type: "success", text: "Location pulled successfully!" });
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        
+        // Get place name from coordinates using reverse geocoding
+        try {
+          const geocodeRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&zoom=10`);
+          const geocodeData = await geocodeRes.json();
+          
+          console.log('Geocoding response:', geocodeData);
+          
+          let placeName = "Custom Coordinates";
+          if (geocodeData && geocodeData.address) {
+            const addr = geocodeData.address;
+            console.log('Address object:', addr);
+            
+            // Try multiple possible city/town/village fields
+            let cityName = addr.city || addr.town || addr.village || addr.suburb || addr.neighbourhood || addr.hamlet;
+            let stateName = addr.state || addr.state_district || addr.region;
+            let postalCode = addr.postcode;
+            
+            console.log('Extracted components:', { cityName, stateName, postalCode });
+            
+            // Build place name prioritizing actual place names
+            if (cityName) {
+              placeName = cityName;
+              if (stateName && stateName !== cityName) {
+                placeName += `, ${stateName}`;
+              }
+              if (postalCode) {
+                placeName += `-${postalCode}`;
+              }
+            } else if (addr.county) {
+              placeName = addr.county;
+              if (stateName && stateName !== addr.county) {
+                placeName += `, ${stateName}`;
+              }
+              if (postalCode) {
+                placeName += `-${postalCode}`;
+              }
+            } else if (stateName) {
+              placeName = stateName;
+              if (postalCode) {
+                placeName += `-${postalCode}`;
+              }
+            }
+            
+            // Add country if different and not already included
+            if (addr.country && !placeName.includes(addr.country)) {
+              placeName += `, ${addr.country}`;
+            }
+          } else if (geocodeData && geocodeData.display_name) {
+            console.log('Using display_name fallback:', geocodeData.display_name);
+            // Better fallback parsing
+            const parts = geocodeData.display_name.split(',').map(p => p.trim());
+            console.log('Parsed parts:', parts);
+            
+            if (parts.length >= 3) {
+              // Try to extract city, state, country pattern
+              const possibleCity = parts[parts.length - 3];
+              const possibleState = parts[parts.length - 2];
+              const country = parts[parts.length - 1];
+              
+              // Check if the middle part looks like a postal code
+              const isPostalCode = /^\d{6}$|^\d{5}-\d{4}$/.test(possibleState);
+              console.log('Is postal code:', isPostalCode, possibleState);
+              
+              if (isPostalCode && parts.length >= 4) {
+                // If middle is postal code, get the city before it
+                placeName = `${parts[parts.length - 4]}-${possibleState}, ${country}`;
+              } else if (!isPostalCode) {
+                // Normal city, state, country pattern
+                placeName = `${possibleCity}, ${possibleState}, ${country}`;
+              } else {
+                // Fallback to last two parts
+                placeName = `${parts[parts.length - 2]}, ${country}`;
+              }
+            } else if (parts.length >= 2) {
+              placeName = `${parts[parts.length - 2]}, ${parts[parts.length - 1]}`;
+            } else {
+              placeName = geocodeData.display_name;
+            }
+          }
+          
+          console.log('Final place name:', placeName);
+          
+          setForm(f => ({ 
+            ...f, 
+            location: { 
+              ...f.location, 
+              latitude: lat, 
+              longitude: lng, 
+              name: placeName 
+            } 
+          }));
+          setMsg({ type: "success", text: `Location detected: ${placeName}` });
+        } catch (error) {
+          // Fallback to coordinates if geocoding fails
+          setForm(f => ({ 
+            ...f, 
+            location: { 
+              ...f.location, 
+              latitude: lat, 
+              longitude: lng, 
+              name: "Custom Coordinates" 
+            } 
+          }));
+          setMsg({ type: "success", text: "Location coordinates retrieved successfully!" });
+        }
       },
       () => setMsg({ type: "error", text: "Unable to retrieve location. Check permissions." })
     );
+  };
+
+  const handleUpdateLocation = async () => {
+    if (!form.location?.latitude || !form.location?.longitude) {
+      return setMsg({ type: "error", text: "No coordinates available. Please detect your location first." });
+    }
+    
+    setMsg({ type: "info", text: "Updating place name..." });
+    
+    try {
+      const geocodeRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${form.location.latitude}&lon=${form.location.longitude}&addressdetails=1&zoom=10`);
+      const geocodeData = await geocodeRes.json();
+      
+      console.log('Update location - Geocoding response:', geocodeData);
+      
+      let placeName = "Custom Coordinates";
+      if (geocodeData && geocodeData.address) {
+        const addr = geocodeData.address;
+        console.log('Update location - Address object:', addr);
+        
+        // Try multiple possible city/town/village fields
+        let cityName = addr.city || addr.town || addr.village || addr.suburb || addr.neighbourhood || addr.hamlet;
+        let stateName = addr.state || addr.state_district || addr.region;
+        let postalCode = addr.postcode;
+        
+        console.log('Update location - Extracted components:', { cityName, stateName, postalCode });
+        
+        // Build place name prioritizing actual place names
+        if (cityName) {
+          placeName = cityName;
+          if (stateName && stateName !== cityName) {
+            placeName += `, ${stateName}`;
+          }
+          if (postalCode) {
+            placeName += `-${postalCode}`;
+          }
+        } else if (addr.county) {
+          placeName = addr.county;
+          if (stateName && stateName !== addr.county) {
+            placeName += `, ${stateName}`;
+          }
+          if (postalCode) {
+            placeName += `-${postalCode}`;
+          }
+        } else if (stateName) {
+          placeName = stateName;
+          if (postalCode) {
+            placeName += `-${postalCode}`;
+          }
+        }
+        
+        // Add country if different and not already included
+        if (addr.country && !placeName.includes(addr.country)) {
+          placeName += `, ${addr.country}`;
+        }
+      } else if (geocodeData && geocodeData.display_name) {
+        console.log('Update location - Using display_name fallback:', geocodeData.display_name);
+        // Better fallback parsing
+        const parts = geocodeData.display_name.split(',').map(p => p.trim());
+        console.log('Update location - Parsed parts:', parts);
+        
+        if (parts.length >= 3) {
+          // Try to extract city, state, country pattern
+          const possibleCity = parts[parts.length - 3];
+          const possibleState = parts[parts.length - 2];
+          const country = parts[parts.length - 1];
+          
+          // Check if the middle part looks like a postal code
+          const isPostalCode = /^\d{6}$|^\d{5}-\d{4}$/.test(possibleState);
+          console.log('Update location - Is postal code:', isPostalCode, possibleState);
+          
+          if (isPostalCode && parts.length >= 4) {
+            // If middle is postal code, get the city before it
+            placeName = `${parts[parts.length - 4]}-${possibleState}, ${country}`;
+          } else if (!isPostalCode) {
+            // Normal city, state, country pattern
+            placeName = `${possibleCity}, ${possibleState}, ${country}`;
+          } else {
+            // Fallback to last two parts
+            placeName = `${parts[parts.length - 2]}, ${country}`;
+          }
+        } else if (parts.length >= 2) {
+          placeName = `${parts[parts.length - 2]}, ${parts[parts.length - 1]}`;
+        } else {
+          placeName = geocodeData.display_name;
+        }
+      }
+      
+      console.log('Update location - Final place name:', placeName);
+      
+      setForm(f => ({ 
+        ...f, 
+        location: { 
+          ...f.location, 
+          name: placeName 
+        } 
+      }));
+      setMsg({ type: "success", text: `Place name updated: ${placeName}` });
+    } catch (error) {
+      setMsg({ type: "error", text: "Failed to update place name. Please try again." });
+    }
   };
 
   const handleCancelEdit = () => {
       // Revert states
       setIsEditing(false);
       setShowMapPicker(false);
-      setForm({
-        age: athleteData?.age || "", height: athleteData?.height || "", weight: athleteData?.weight || "",
-        sports: athleteData?.user?.sports || [],
-        bio: athleteData?.user?.bio || "", name: athleteData?.user?.name || user?.name || "", profilePic: athleteData?.user?.profilePic || user?.profilePic || "",
-        location: athleteData?.user?.location || { name: "", latitude: 0, longitude: 0 }
-      });
+      if (savedForm) setForm(savedForm);
       setMsg(null);
   }
 
@@ -319,9 +550,16 @@ export default function AthleteProfile() {
                     <div style={{ padding: "1.2rem", background: "var(--theme-surface-2)", borderRadius: 12, border: "1px solid var(--theme-border)", marginTop: "auto" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.8rem" }}>
                             <div style={{ fontSize: "0.85rem", color: "var(--theme-text)", fontWeight: 700, textTransform: "uppercase" }}>Base Location</div>
-                            <button type="button" onClick={handleFetchLocation} className="btn-ghost" style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", background: "var(--theme-surface)" }}>
-                                <Compass size={14} /> Auto-Locate
-                            </button>
+                            <div style={{ display: "flex", gap: "0.5rem" }}>
+                                <button type="button" onClick={handleFetchLocation} className="btn-ghost" style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", background: "var(--theme-surface)" }}>
+                                    <Compass size={14} /> Auto-Detect
+                                </button>
+                                {form.location?.latitude && form.location?.longitude && (
+                                    <button type="button" onClick={handleUpdateLocation} className="btn-ghost" style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", background: "var(--theme-surface)" }}>
+                                        <Compass size={14} /> Update Place
+                                    </button>
+                                )}
+                            </div>
                         </div>
                         <div className="field-group" style={{ marginBottom: "0.8rem" }}>
                             <input className="field-input" type="text" placeholder="City or Region Name (e.g. London)" value={form.location?.name || ""} onChange={e => setForm(f => ({ ...f, location: { ...f.location, name: e.target.value } }))} maxLength={VALIDATION_LIMITS.locationNameMax} style={{ padding: "0.5rem 0.8rem", fontSize: "0.85rem" }} />

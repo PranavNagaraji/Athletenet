@@ -489,10 +489,10 @@
 }
 
 .auth-error-slot {
-  min-height: 3.25rem;
   margin: 0.75rem 0 0;
   display: grid;
   align-items: center;
+  min-height: 0;
 }
 
 .auth-error {

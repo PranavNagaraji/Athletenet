@@ -16,16 +16,26 @@ export default function ClubProfile() {
     profilePic: "",
     clubId: "",
   });
+  const [savedForm, setSavedForm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [msg, setMsg] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     fetch(`${API}/api/club/profile`, { credentials: "include" })
       .then((response) => response.json())
       .then((data) => {
         setForm({
+          establishedYear: data.establishedYear || "",
+          specialization: data.specialization || "",
+          facilities: Array.isArray(data.facilities) ? data.facilities.join(", ") : "",
+          name: data.name || user?.name || "",
+          profilePic: data.profilePic || user?.profilePic || "",
+          clubId: data._id || "",
+        });
+        setSavedForm({
           establishedYear: data.establishedYear || "",
           specialization: data.specialization || "",
           facilities: Array.isArray(data.facilities) ? data.facilities.join(", ") : "",
@@ -56,7 +66,26 @@ export default function ClubProfile() {
       const res = await fetch(`${API}/api/upload`, { method: "POST", body: formData });
       const data = await res.json();
       if (data.success) {
+        // Update form state immediately for preview
         setForm((current) => ({ ...current, profilePic: data.url }));
+        
+        // Immediately save to user profile to persist on reload
+        const profileRes = await fetch(`${API}/api/user/profile`, {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profilePic: data.url }),
+        });
+        
+        if (profileRes.ok) {
+          setMsg({ type: "success", text: "Club image updated successfully!" });
+          // Update saved form to reflect saved state
+          setSavedForm((f) => ({ ...f, profilePic: data.url }));
+          // Refresh auth context to update user data
+          checkAuth();
+        } else {
+          setMsg({ type: "error", text: "Image uploaded but failed to save. Try saving profile manually." });
+        }
       } else {
         setMsg({ type: "error", text: data.message });
       }
@@ -65,6 +94,17 @@ export default function ClubProfile() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleStartEdit = () => {
+    setIsEditing(true);
+    setMsg(null);
+  };
+
+  const handleCancelEdit = () => {
+    if (savedForm) setForm(savedForm);
+    setIsEditing(false);
+    setMsg(null);
   };
 
   const handleSave = async (event) => {
@@ -116,6 +156,8 @@ export default function ClubProfile() {
       ]);
 
       if (resClub.ok && resUser.ok) {
+        setSavedForm({ ...form });
+        setIsEditing(false);
         setMsg({ type: "success", text: "Profile updated successfully." });
         checkAuth();
       } else {
@@ -222,7 +264,14 @@ export default function ClubProfile() {
 
         <form onSubmit={handleSave} className="profile-form-grid">
           <div className="card stack-md" style={{ display: "flex", flexDirection: "column" }}>
-            <h2 className="card-section-title">Brand Identity</h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: "1rem" }}>
+              <h2 className="card-section-title">Edit Club Profile</h2>
+              {!isEditing && (
+                <button type="button" className="btn-ghost" onClick={handleStartEdit} style={{ whiteSpace: "nowrap" }}>
+                  Edit Profile
+                </button>
+              )}
+            </div>
 
             <div className="media-upload-card">
               <div className="upload-avatar-xl">
@@ -235,7 +284,7 @@ export default function ClubProfile() {
                 )}
               </div>
               <div>
-                <label className="btn-ghost" style={{ cursor: "pointer", display: "inline-flex" }}>
+                <label className="btn-ghost" style={{ cursor: uploading ? "not-allowed" : "pointer", display: "inline-flex", opacity: uploading ? 0.65 : 1 }}>
                   {uploading ? "Uploading..." : "Upload Club Image"}
                   <input type="file" accept="image/*" hidden onChange={handleUpload} disabled={uploading} />
                 </label>
@@ -254,6 +303,7 @@ export default function ClubProfile() {
                 required
                 minLength={VALIDATION_LIMITS.nameMin}
                 maxLength={VALIDATION_LIMITS.clubNameMax}
+                disabled={!isEditing}
               />
             </div>
 
@@ -279,6 +329,7 @@ export default function ClubProfile() {
                   value={form.establishedYear}
                   onChange={(event) => setForm((current) => ({ ...current, establishedYear: event.target.value }))}
                   placeholder="e.g. 2010"
+                  disabled={!isEditing}
                 />
               </div>
               <div className="field-group">
@@ -290,6 +341,7 @@ export default function ClubProfile() {
                   onChange={(event) => setForm((current) => ({ ...current, specialization: event.target.value }))}
                   placeholder="e.g. Football"
                   maxLength={VALIDATION_LIMITS.specializationMax}
+                  disabled={!isEditing}
                 />
               </div>
             </div>
@@ -303,6 +355,7 @@ export default function ClubProfile() {
                 onChange={(event) => setForm((current) => ({ ...current, facilities: event.target.value }))}
                 placeholder="e.g. Gym, Pool, Track, Indoor Court"
                 maxLength={VALIDATION_LIMITS.facilitiesMax}
+                disabled={!isEditing}
               />
             </div>
 
@@ -328,12 +381,17 @@ export default function ClubProfile() {
               </div>
             </div>
 
-            <div className="form-actions-row">
-              <button type="submit" className="btn-primary" disabled={saving}>
-                {saving ? <Loader2 size={15} className="spinner-icon" /> : <Save size={15} />}
-                Save Changes
-              </button>
-            </div>
+            {isEditing ? (
+              <div className="form-actions-row">
+                <button type="button" className="btn-ghost" onClick={handleCancelEdit} disabled={saving}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary" disabled={saving}>
+                  {saving ? <Loader2 size={15} className="spinner-icon" /> : <Save size={15} />}
+                  Save Changes
+                </button>
+              </div>
+            ) : null}
           </div>
         </form>
       </div>
