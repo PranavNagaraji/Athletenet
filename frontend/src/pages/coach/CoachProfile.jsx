@@ -43,10 +43,6 @@ export default function CoachProfile() {
   }, [user]);
 
   const handleUpload = async (e) => {
-    if (!isEditing) {
-      setMsg({ type: "error", text: "Click edit to update your profile photo." });
-      return;
-    }
     const file = e.target.files[0];
     if (!file) return;
     const fileError = validateFile(file);
@@ -61,8 +57,30 @@ export default function CoachProfile() {
     try {
       const res = await fetch(`${API}/api/upload`, { method: "POST", body: fd });
       const data = await res.json();
-      if (data.success) setForm((f) => ({ ...f, profilePic: data.url }));
-      else setMsg({ type: "error", text: data.message });
+      if (data.success) {
+        // Update form state immediately for preview
+        setForm((f) => ({ ...f, profilePic: data.url }));
+        
+        // Immediately save to user profile to persist on reload
+        const profileRes = await fetch(`${API}/api/user/profile`, {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profilePic: data.url }),
+        });
+        
+        if (profileRes.ok) {
+          setMsg({ type: "success", text: "Profile photo updated successfully!" });
+          // Update saved form to reflect the saved state
+          setSavedForm((f) => ({ ...f, profilePic: data.url }));
+          // Refresh auth context to update user data
+          checkAuth();
+        } else {
+          setMsg({ type: "error", text: "Photo uploaded but failed to save. Try saving profile manually." });
+        }
+      } else {
+        setMsg({ type: "error", text: data.message });
+      }
     } catch {
       setMsg({ type: "error", text: "Upload failed" });
     } finally {
@@ -273,9 +291,9 @@ export default function CoachProfile() {
                     {form.name || "Coach"}
                   </div>
                 </div>
-                <label className="btn-ghost" style={{ cursor: isEditing ? "pointer" : "not-allowed", display: "inline-flex", width: "fit-content", opacity: isEditing ? 1 : 0.65 }}>
+                <label className="btn-ghost" style={{ cursor: uploading ? "not-allowed" : "pointer", display: "inline-flex", width: "fit-content", opacity: uploading ? 0.65 : 1 }}>
                   {uploading ? "Uploading..." : "Upload Photo"}
-                  <input type="file" accept="image/*" hidden onChange={handleUpload} disabled={!isEditing || uploading} />
+                  <input type="file" accept="image/*" hidden onChange={handleUpload} disabled={uploading} />
                 </label>
                 <p style={{ fontSize: "0.75rem", color: "var(--theme-muted)", margin: 0 }}>JPG, PNG or WEBP. Max 5MB.</p>
               </div>
@@ -388,7 +406,7 @@ export default function CoachProfile() {
                 <span style={{ userSelect: "all" }}>{user?._id || "Loading..."}</span>
               </div>
 
-              {isEditing ? (
+              {isEditing && (
                 <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", width: "100%" }}>
                   <button type="button" className="btn-ghost" onClick={handleCancelEdit} disabled={saving} style={{ flex: 1, minWidth: 120 }}>
                     Cancel
@@ -396,10 +414,6 @@ export default function CoachProfile() {
                   <button type="submit" className="btn-primary" disabled={saving} style={{ flex: 1, minWidth: 140, justifyContent: "center", padding: "1rem" }}>
                     {saving ? <Loader2 size={16} className="spinner-icon" /> : <Save size={16} />} Save Profile
                   </button>
-                </div>
-              ) : (
-                <div style={{ padding: "1rem", background: "var(--theme-surface-2)", borderRadius: 14, border: "1px solid var(--theme-border)", color: "var(--theme-muted)", fontSize: "0.95rem" }}>
-                  Tap edit to unlock your coaching details and save your latest profile update.
                 </div>
               )}
             </form>
