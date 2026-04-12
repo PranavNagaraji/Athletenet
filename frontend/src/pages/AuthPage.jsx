@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Zap, Mail, Lock, User, PersonStanding, Shield, Building2, Loader2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -14,10 +14,31 @@ export default function AuthPage({ defaultMode = "login" }) {
   const [passwordValue, setPasswordValue] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [confirmTouched, setConfirmTouched] = useState(false);
+  const errorTimer = useRef(null);
 
   const backend_url = import.meta.env.VITE_BACKEND_URL;
   const navigate = useNavigate();
   const { checkAuth } = useAuth();
+
+  const clearErrorTimer = () => {
+    if (errorTimer.current) {
+      window.clearTimeout(errorTimer.current);
+      errorTimer.current = null;
+    }
+  };
+
+  const showError = (message) => {
+    clearErrorTimer();
+    setError(message);
+    errorTimer.current = window.setTimeout(() => {
+      setError("");
+      errorTimer.current = null;
+    }, 2000);
+  };
+
+  useEffect(() => {
+    return () => clearErrorTimer();
+  }, []);
 
   const switchMode = (newMode) => {
     setError("");
@@ -29,6 +50,7 @@ export default function AuthPage({ defaultMode = "login" }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    clearErrorTimer();
     setError("");
     setLoading(true);
 
@@ -46,25 +68,25 @@ export default function AuthPage({ defaultMode = "login" }) {
     }
 
     if (!isValidEmail(payload.email)) {
-      setError("Please enter a valid email address.");
+      showError("Please enter a valid email address.");
       setLoading(false);
       return;
     }
 
     if (!isStrongPassword(payload.password)) {
-      setError("Password must be at least 8 characters long.");
+      showError("Password must be at least 8 characters long.");
       setLoading(false);
       return;
     }
 
     if (mode === "signup" && password !== confirmPasswordValue) {
-      setError("Passwords do not match. Please verify both fields.");
+      showError("Passwords do not match. Please verify both fields.");
       setLoading(false);
       return;
     }
 
     if (mode === "signup" && payload.name.length < VALIDATION_LIMITS.nameMin) {
-      setError("Please enter your full name.");
+      showError("Please enter your full name.");
       setLoading(false);
       return;
     }
@@ -84,10 +106,10 @@ export default function AuthPage({ defaultMode = "login" }) {
         if (ok) navigate("/home", { replace: true });
       } else {
         const data = await res.json();
-        setError(data.message || "Something went wrong.");
+        showError(data.message || "Something went wrong.");
       }
     } catch {
-      setError("Network error. Please check your connection.");
+      showError("Network error. Please check your connection.");
     } finally {
       setLoading(false);
     }
@@ -128,7 +150,9 @@ export default function AuthPage({ defaultMode = "login" }) {
                 onChange={(e) => setPasswordValue(e.target.value)}
               />
             </div>
-            {error && <div className="auth-error animate-slide-up">{error}</div>}
+            <div className="auth-error-slot">
+              {error && <div className="auth-error">{error}</div>}
+            </div>
             <button type="submit" className="auth-submit-btn animate-slide-up stagger-4" disabled={loading}>
               {loading ? <Loader2 size={24} className="spinner-icon" /> : "Sign In"}
             </button>
@@ -211,7 +235,9 @@ export default function AuthPage({ defaultMode = "login" }) {
               ))}
             </div>
 
-            {error && <div className="auth-error animate-slide-up">{error}</div>}
+            <div className="auth-error-slot">
+              {error && <div className="auth-error">{error}</div>}
+            </div>
             <button type="submit" className="auth-submit-btn animate-slide-up stagger-4" disabled={loading}>
               {loading ? <Loader2 size={24} className="spinner-icon" /> : "Create Account"}
             </button>
