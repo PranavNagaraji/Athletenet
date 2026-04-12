@@ -12,8 +12,8 @@ export function createCookie(res, userId, userRole) {
 
     res.cookie("token", token, {
         httpOnly: true,
-        secure: false, // true in production for HTTPS
-        sameSite: "lax",
+        secure: true, // true in production for HTTPS
+        sameSite: "None",
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 Days
     });
 }
