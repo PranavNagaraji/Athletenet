@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { MessageSquare, Send, Users, User, Dumbbell, Paperclip, Loader2, FileText, Trophy, Info, ShieldCheck, MapPin, Image, X } from "lucide-react";
+import { MessageSquare, Send, Users, User, Dumbbell, Paperclip, Loader2, FileText, Trophy, Info, ShieldCheck, MapPin, Image, X, ChevronLeft } from "lucide-react";
 import { io } from "socket.io-client";
 import { useAuth } from "../../context/AuthContext";
 import { VALIDATION_LIMITS, validateFile } from "../../utils/formValidation";
@@ -356,8 +356,8 @@ export default function ClubChat() {
         <div className="card" style={{ flex: 1, display: "flex", flexDirection: "column", padding: 0, overflow: "hidden", background: "var(--theme-surface)" }}>
            {!activeChat ? (
              <div className="empty-state" style={{ height: "100%", justifyContent: "center", border: "none" }}>
-               <button onClick={() => setSidebarOpen(!sidebarOpen)} className="btn-ghost" style={{ position: "absolute", top: 15, left: 15 }}>
-                 <Users size={20} />
+               <button onClick={() => setSidebarOpen(!sidebarOpen)} className="btn-ghost" style={{ position: "absolute", top: 15, left: 15 }} title={sidebarOpen ? "Collapse sidebar" : "Open sidebar"}>
+                 <ChevronLeft size={20} style={{ transform: sidebarOpen ? "rotate(0deg)" : "rotate(180deg)" }} />
                </button>
                <MessageSquare size={50} opacity={0.3} />
                <p style={{ marginTop: "1rem", color: "var(--theme-muted)", maxWidth: 300, textAlign: "center", lineHeight: 1.5 }}>Select a channel to start broadcasting.</p>
@@ -366,8 +366,8 @@ export default function ClubChat() {
              <>
                {/* Chat Header */}
                <div style={{ padding: "0.8rem 1.5rem", background: "var(--theme-surface)", borderBottom: "1px solid var(--theme-border)", display: "flex", alignItems: "center", gap: "1rem" }}>
-                 <button onClick={() => setSidebarOpen(!sidebarOpen)} className="btn-ghost" style={{ padding: "0.5rem", borderRadius: 8, background: "var(--theme-surface-2)" }}>
-                    <Users size={18} />
+                 <button onClick={() => setSidebarOpen(!sidebarOpen)} className="btn-ghost" style={{ padding: "0.5rem", borderRadius: 8, background: "var(--theme-surface-2)" }} title={sidebarOpen ? "Collapse sidebar" : "Open sidebar"}>
+                    <ChevronLeft size={18} style={{ transform: sidebarOpen ? "rotate(0deg)" : "rotate(180deg)" }} />
                  </button>
                  {renderAvatar(activeChat.name, activeChat.avatar, 40, activeChat.type === "group" ? "club" : activeChat.type === "team_chat" ? "team" : activeChat.type === "tournament_chat" ? "team" : "coach")}
                  <div style={{ flex: 1 }}>
