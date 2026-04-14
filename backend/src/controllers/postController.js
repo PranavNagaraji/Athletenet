@@ -7,7 +7,7 @@ export const createPost = async (req, res) => {
     try {
         const { content, mediaUrl, mediaType, clubId, teamId, tags } = req.body;
         const post = await Post.create({
-            author: req.user._id, content, mediaUrl, mediaType,
+            author: req.user.id, content, mediaUrl, mediaType,
             club: clubId || null,
             team: teamId || null,
             tags: tags || []
@@ -57,8 +57,8 @@ export const getFeed = async (req, res) => {
 
         if (req.user) {
             // Find athlete or coach profile to get clubs
-            const athlete = await Athlete.findOne({ user: req.user._id });
-            const coach = await Coach.findOne({ user: req.user._id });
+            const athlete = await Athlete.findOne({ user: req.user.id });
+            const coach = await Coach.findOne({ user: req.user.id });
             
             if (athlete) userClubs = athlete.clubs.map(c => c.toString());
             if (coach) userClubs = coach.clubs.map(c => c.toString());
@@ -66,8 +66,8 @@ export const getFeed = async (req, res) => {
             // Find teams the user is in
             const teams = await Team.find({
                 $or: [
-                    { athletes: req.user._id },
-                    { coaches: req.user._id }
+                    { athletes: req.user.id },
+                    { coaches: req.user.id }
                 ]
             });
             userTeams = teams.map(t => t._id.toString());
@@ -138,9 +138,9 @@ export const toggleLike = async (req, res) => {
         const post = await Post.findById(req.params.id);
         if (!post) return res.status(404).json({ message: "Post not found" });
 
-        const index = post.likes.indexOf(req.user._id);
+        const index = post.likes.indexOf(req.user.id);
         if (index === -1) {
-            post.likes.push(req.user._id);
+            post.likes.push(req.user.id);
         } else {
             post.likes.splice(index, 1);
         }
@@ -158,7 +158,7 @@ export const addComment = async (req, res) => {
         const post = await Post.findById(req.params.id);
         if (!post) return res.status(404).json({ message: "Post not found" });
 
-        post.comments.push({ user: req.user._id, text });
+        post.comments.push({ user: req.user.id, text });
         await post.save();
         
         const updatedPost = await Post.findById(req.params.id)

@@ -22,7 +22,7 @@ export const createBooking = async (req, res) => {
 
         const booking = await PlaygroundBooking.create({
             playground: pgId,
-            bookedBy: req.user._id,
+            bookedBy: req.user.id,
             startTime,
             endTime
         });
@@ -108,7 +108,7 @@ export const getAvailableSlots = async (req, res) => {
 export const getMyBookings = async (req, res) => {
     try {
         const bookings = await PlaygroundBooking.find({
-            bookedBy: req.user._id
+            bookedBy: req.user.id
         })
             .populate("playground")
             .sort({ updatedAt: -1, createdAt: -1 });
@@ -139,7 +139,7 @@ export const cancelBooking = async (req, res) => {
         const booking = await PlaygroundBooking.findById(req.params.id);
         if (!booking) return res.status(404).json({ message: "Booking not found" });
 
-        if (booking.bookedBy.toString() !== req.user._id.toString())
+        if (booking.bookedBy.toString() !== req.user.id.toString())
             return res.status(403).json({ message: "Not authorized to cancel this booking" });
 
         booking.status = "cancelled";
@@ -181,7 +181,7 @@ export const toggleBlockSlot = async (req, res) => {
 
         await PlaygroundBooking.create({
             playground: playgroundId,
-            bookedBy: req.user._id,
+            bookedBy: req.user.id,
             startTime: start,
             endTime: end,
             status: "blocked"

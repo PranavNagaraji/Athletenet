@@ -42,7 +42,7 @@ export const getTournamentMessages = async (req, res) => {
 export const getDirectMessages = async (req, res) => {
     try {
         const { otherUserId } = req.params;
-        const myId = req.user._id;
+        const myId = req.user.id;
 
         const messages = await Message.find({
             $or: [

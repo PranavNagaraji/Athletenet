@@ -16,16 +16,19 @@ import {
 
 const router = express.Router();
 
-router.post("/create", protect, authorize("club"), createTeam); 
+// Static routes FIRST (before parameterized routes)
+router.post("/create", protect, authorize("club"), createTeam);
 router.post("/athlete", protect, authorize("club"), addAthleteToTeam);
 router.delete("/athlete", protect, authorize("club"), deleteAthleteFromTeam);
 router.post("/coach", protect, authorize("club"), addCoachToTeam);
 router.delete("/coach", protect, authorize("club"), deleteCoachFromTeam);
-router.put("/:id", protect, authorize("club"), updateTeamName);
-router.get("/club/:clubId", getAllTeamsByClub);
-router.get("/:id", getTeamById);
-router.delete("/:id", protect, authorize("club"), deleteTeamById); 
 router.post("/join", protect, authorize("athlete"), joinTeamAsAthlete);
 router.post("/join/coach", protect, authorize("coach"), joinTeamAsCoach);
+router.get("/club/:clubId", getAllTeamsByClub);
+
+// Parameterized routes LAST (to avoid catching static routes)
+router.put("/:id", protect, authorize("club"), updateTeamName);
+router.get("/:id", getTeamById);
+router.delete("/:id", protect, authorize("club"), deleteTeamById);
 
 export default router;

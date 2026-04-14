@@ -4,7 +4,7 @@ import JoinRequest from "../models/JoinRequest.js";
 
 export const getMyProfile = async (req, res) => {
     try {
-        const athlete = await Athlete.findOne({ user: req.user._id })
+        const athlete = await Athlete.findOne({ user: req.user.id })
             .populate("user")
             .populate({
                 path: "clubs",
@@ -22,7 +22,7 @@ export const updateMyProfile = async (req, res) => {
     try {
         const updates = req.body;
         const athlete = await Athlete.findOneAndUpdate(
-            { user: req.user._id },
+            { user: req.user.id },
             updates,
             {
                 new: true,
@@ -53,9 +53,9 @@ export const getNearbyClubs = async (req, res) => {
 
 export const getMyJoinRequests = async (req, res) => {
     try {
-        const athlete = await Athlete.findOne({ user: req.user._id });
+        const athlete = await Athlete.findOne({ user: req.user.id });
         if (!athlete) return res.status(404).json({ message: "Athlete not found" });
-        const joinRequests = await JoinRequest.find({ user: req.user._id })
+        const joinRequests = await JoinRequest.find({ user: req.user.id })
             .sort({ createdAt: -1, updatedAt: -1 });
         res.status(200).json(joinRequests);
     } catch (error) {
