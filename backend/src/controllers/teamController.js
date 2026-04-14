@@ -7,9 +7,9 @@ import Coach from "../models/Coach.js";
 export const createTeam = async (req, res) => {
     try {
         const { name } = req.body;
-        const club = await Club.findOne({ admin: req.user._id });
+        const club = await Club.findOne({ admin: req.user.id });
         if (!club) return res.status(404).json({ message: "Club not found" });
-        const team = await Team.create({ name, club: club._id }); // Fix: store club._id, not req.user._id
+        const team = await Team.create({ name, club: club.id });
         res.status(201).json(team);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -29,11 +29,18 @@ export const addAthleteToTeam = async (req, res) => {
         const added = [];
         for (const id of ids) {
             if (team.athletes.includes(id)) continue;
-            const athlete = await Athlete.findOne({ user: id });
+            // Try to find athlete by document ID first, then by user ID
+            let athlete = await Athlete.findById(id);
+            if (!athlete) {
+                athlete = await Athlete.findOne({ user: id });
+            }
             if (!athlete)
                 return res.status(404).json({ message: `Athlete not found: ${id}` });
-            team.athletes.push(id);
-            added.push(id);
+            // Store the user ID in team.athletes for consistency
+            const userId = athlete.user;
+            if (team.athletes.includes(userId)) continue;
+            team.athletes.push(userId);
+            added.push(userId);
         }
 
         if (!added.length)
@@ -52,9 +59,17 @@ export const deleteAthleteFromTeam = async (req, res) => {
         const team = await Team.findById(teamId);
         if (!team)
             return res.status(404).json({ message: "Team not found" });
-        if (!team.athletes.includes(athleteId))
+        
+        // Try to find athlete by document ID first, then by user ID
+        let athlete = await Athlete.findById(athleteId);
+        let userId = athleteId;
+        if (athlete) {
+            userId = athlete.user;
+        }
+        
+        if (!team.athletes.includes(userId))
             return res.status(400).json({ message: "Athlete not in team" });
-        team.athletes.pull(athleteId);
+        team.athletes.pull(userId);
         await team.save();
         res.status(200).json(team);
     } catch (error) {
@@ -90,11 +105,18 @@ export const addCoachToTeam = async (req, res) => {
         const added = [];
         for (const id of ids) {
             if (team.coaches.includes(id)) continue;
-            const coach = await Coach.findOne({ user: id });
+            // Try to find coach by document ID first, then by user ID
+            let coach = await Coach.findById(id);
+            if (!coach) {
+                coach = await Coach.findOne({ user: id });
+            }
             if (!coach)
                 return res.status(404).json({ message: `Coach not found: ${id}` });
-            team.coaches.push(id);
-            added.push(id);
+            // Store the user ID in team.coaches for consistency
+            const userId = coach.user;
+            if (team.coaches.includes(userId)) continue;
+            team.coaches.push(userId);
+            added.push(userId);
         }
 
         if (!added.length)
@@ -113,9 +135,17 @@ export const deleteCoachFromTeam = async (req, res) => {
         const team = await Team.findById(teamId);
         if (!team)
             return res.status(404).json({ message: "Team not found" });
-        if (!team.coaches.includes(coachId))
+        
+        // Try to find coach by document ID first, then by user ID
+        let coach = await Coach.findById(coachId);
+        let userId = coachId;
+        if (coach) {
+            userId = coach.user;
+        }
+        
+        if (!team.coaches.includes(userId))
             return res.status(400).json({ message: "Coach not in team" });
-        team.coaches.pull(coachId);
+        team.coaches.pull(userId);
         await team.save();
         res.status(200).json(team);
     } catch (error) {
@@ -168,18 +198,18 @@ export const joinTeamAsAthlete = async (req, res) => {
         const team = await Team.findById(teamId);
         if (!team) return res.status(404).json({ message: "Team not found" });
 
-        const athlete = await Athlete.findOne({ user: req.user._id });
+        const athlete = await Athlete.findOne({ user: req.user.id });
         if (!athlete) return res.status(404).json({ message: "Athlete not found" });
 
         if (!athlete.clubs.includes(team.club)) {
             return res.status(403).json({ message: "You must be a member of the club to join its teams" });
         }
 
-        if (team.athletes.includes(req.user._id)) {
+        if (team.athletes.includes(req.user.id)) {
             return res.status(400).json({ message: "You are already in this team" });
         }
 
-        team.athletes.push(req.user._id);
+        team.athletes.push(req.user.id);
         await team.save();
         res.status(200).json({ message: "Successfully joined team", team });
     } catch (error) {
@@ -193,7 +223,7 @@ export const joinTeamAsCoach = async (req, res) => {
         const team = await Team.findById(teamId);
         if (!team) return res.status(404).json({ message: "Team not found" });
 
-        const coach = await Coach.findOne({ user: req.user._id });
+        const coach = await Coach.findOne({ user: req.user.id });
         if (!coach) return res.status(404).json({ message: "Coach not found" });
 
         // Ensure coach is part of the club that owns the team
@@ -201,11 +231,11 @@ export const joinTeamAsCoach = async (req, res) => {
             return res.status(403).json({ message: "You must be a member of the club to coach its teams" });
         }
 
-        if (team.coaches.includes(req.user._id)) {
+        if (team.coaches.includes(req.user.id)) {
             return res.status(400).json({ message: "You are already a coach for this team" });
         }
 
-        team.coaches.push(req.user._id);
+        team.coaches.push(req.user.id);
         await team.save();
         res.status(200).json({ message: "Successfully joined team as coach", team });
     } catch (error) {
