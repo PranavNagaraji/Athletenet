@@ -16,21 +16,21 @@ export const createJoinRequest = async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const role = decoded.role;
         if (role === 'athlete') {
-            const athlete = await Athlete.findOne({ user: req.user._id });
+            const athlete = await Athlete.findOne({ user: req.user.id });
             if (!athlete)
                 return res.status(404).json({ message: "Athlete not found" });
             if (athlete.clubs.includes(club._id))
                 return res.status(400).json({ message: "You are already a member of this club" });
         } else if (role == 'coach') {
-            const coach = await Coach.findOne({ user: req.user._id });
+            const coach = await Coach.findOne({ user: req.user.id });
             if (!coach)
                 return res.status(404).json({ message: "Coach not found" });
             if (coach.clubs.includes(club._id))
                 return res.status(400).json({ message: "You are already a member of this club" });
         }
-        const existingRequest = await JoinRequest.findOne({ user: req.user._id, club: club._id, status: "pending" });
+        const existingRequest = await JoinRequest.findOne({ user: req.user.id, club: club._id, status: "pending" });
         if (existingRequest) return res.status(400).json({ message: "You have already sent a join request to this club" });
-        const joinRequest = await JoinRequest.create({ user: req.user._id, club: club._id, message });
+        const joinRequest = await JoinRequest.create({ user: req.user.id, club: club._id, message });
         res.status(200).json({ message: "Join request sent successfully", joinRequest });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -39,7 +39,7 @@ export const createJoinRequest = async (req, res) => {
 
 export const getAllJoinRequests = async (req, res) => {
     try {
-        const club = await Club.findOne({ admin: req.user._id });
+        const club = await Club.findOne({ admin: req.user.id });
         if (!club) return res.status(404).json({ message: "Club not found" });
         const joinRequests = await JoinRequest.find({ club: club._id })
             .populate("user")
@@ -53,7 +53,7 @@ export const getAllJoinRequests = async (req, res) => {
 
 export const getAthleteJoinRequests = async (req, res) => {
     try {
-        const club = await Club.findOne({ admin: req.user._id });
+        const club = await Club.findOne({ admin: req.user.id });
         if (!club) return res.status(404).json({ message: "Club not found" });
         const joinRequests = await JoinRequest.find({ club: club._id })
             .populate({
@@ -70,7 +70,7 @@ export const getAthleteJoinRequests = async (req, res) => {
 
 export const getCoachJoinRequests = async (req, res) => {
     try {
-        const club = await Club.findOne({ admin: req.user._id });
+        const club = await Club.findOne({ admin: req.user.id });
         if (!club) return res.status(404).json({ message: "Club not found" });
         const joinRequests = await JoinRequest.find({ club: club._id })
             .populate({

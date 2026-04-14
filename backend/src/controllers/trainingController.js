@@ -26,7 +26,7 @@ export const createSession = async (req, res) => {
       duration: duration || 60,
       location: location || "",
       team: teamId,
-      coach: req.user._id,
+      coach: req.user.id,
       attendees,
     });
 
@@ -43,7 +43,7 @@ export const createSession = async (req, res) => {
 // GET /api/training/coach — get all sessions for logged-in coach
 export const getCoachSessions = async (req, res) => {
   try {
-    const sessions = await TrainingSession.find({ coach: req.user._id })
+    const sessions = await TrainingSession.find({ coach: req.user.id })
       .populate("team", "name")
       .populate("attendees.user", "name profilePic")
       .sort({ date: -1 });
@@ -73,7 +73,7 @@ export const getSessionsByTeam = async (req, res) => {
 // PUT /api/training/:id — update session details/status
 export const updateSession = async (req, res) => {
   try {
-    const session = await TrainingSession.findOne({ _id: req.params.id, coach: req.user._id });
+    const session = await TrainingSession.findOne({ _id: req.params.id, coach: req.user.id });
     if (!session) return res.status(404).json({ message: "Session not found" });
 
     const { title, description, date, duration, location, status } = req.body;
@@ -98,7 +98,7 @@ export const updateSession = async (req, res) => {
 // DELETE /api/training/:id — delete session
 export const deleteSession = async (req, res) => {
   try {
-    const session = await TrainingSession.findOneAndDelete({ _id: req.params.id, coach: req.user._id });
+    const session = await TrainingSession.findOneAndDelete({ _id: req.params.id, coach: req.user.id });
     if (!session) return res.status(404).json({ message: "Session not found" });
     res.status(200).json({ message: "Session deleted" });
   } catch (error) {
@@ -110,7 +110,7 @@ export const deleteSession = async (req, res) => {
 export const markAttendance = async (req, res) => {
   try {
     const { attendees } = req.body; // [{ userId, attended }]
-    const session = await TrainingSession.findOne({ _id: req.params.id, coach: req.user._id });
+    const session = await TrainingSession.findOne({ _id: req.params.id, coach: req.user.id });
     if (!session) return res.status(404).json({ message: "Session not found" });
 
     attendees.forEach(({ userId, attended }) => {

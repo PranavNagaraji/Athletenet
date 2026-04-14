@@ -6,7 +6,7 @@ import Coach from "../models/Coach.js";
 
 export const createInvite = async (req, res) => {
     try {
-        const club = await Club.findOne({ admin: req.user._id });
+        const club = await Club.findOne({ admin: req.user.id });
         if (!club) return res.status(404).json({ message: "Club profile not found" });
 
         const { recipientId, message } = req.body;
@@ -35,7 +35,7 @@ export const createInvite = async (req, res) => {
             club: club._id,
             recipient: recipient._id,
             recipientRole: recipient.role,
-            invitedBy: req.user._id,
+            invitedBy: req.user.id,
             message: message || "",
             status: "pending"
         });
@@ -48,7 +48,7 @@ export const createInvite = async (req, res) => {
 
 export const getMyInvites = async (req, res) => {
     try {
-        const invites = await Invite.find({ recipient: req.user._id })
+        const invites = await Invite.find({ recipient: req.user.id })
             .populate({ path: "club", populate: { path: "admin", select: "name profilePic" } })
             .sort({ createdAt: -1 });
         return res.status(200).json(invites);
@@ -60,7 +60,7 @@ export const getMyInvites = async (req, res) => {
 export const acceptInvite = async (req, res) => {
     try {
         const inviteId = req.params.id;
-        const invite = await Invite.findOne({ _id: inviteId, recipient: req.user._id });
+        const invite = await Invite.findOne({ _id: inviteId, recipient: req.user.id });
         if (!invite) return res.status(404).json({ message: "Invitation not found" });
         if (invite.status !== "pending") return res.status(400).json({ message: "Only pending invitations can be accepted" });
 
@@ -69,13 +69,13 @@ export const acceptInvite = async (req, res) => {
 
         if (invite.recipientRole === "athlete") {
             await Athlete.findOneAndUpdate(
-                { user: req.user._id },
+                { user: req.user.id },
                 { $addToSet: { clubs: club._id } },
                 { new: true, upsert: true }
             );
         } else if (invite.recipientRole === "coach") {
             await Coach.findOneAndUpdate(
-                { user: req.user._id },
+                { user: req.user.id },
                 { $addToSet: { clubs: club._id } },
                 { new: true, upsert: true }
             );
@@ -93,7 +93,7 @@ export const acceptInvite = async (req, res) => {
 export const rejectInvite = async (req, res) => {
     try {
         const inviteId = req.params.id;
-        const invite = await Invite.findOne({ _id: inviteId, recipient: req.user._id });
+        const invite = await Invite.findOne({ _id: inviteId, recipient: req.user.id });
         if (!invite) return res.status(404).json({ message: "Invitation not found" });
         if (invite.status !== "pending") return res.status(400).json({ message: "Only pending invitations can be rejected" });
 

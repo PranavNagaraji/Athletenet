@@ -82,12 +82,12 @@ const athleteCanAccessEvent = (event, athleteClubIds, athleteTeamIds) => {
 
 export const getCoachTeamsForTools = async (req, res) => {
   try {
-    const coachProfile = await getCoachProfile(req.user._id);
+    const coachProfile = await getCoachProfile(req.user.id);
     if (!coachProfile) {
       return res.status(404).json({ message: "Coach profile not found" });
     }
 
-    const teams = await getCoachTeams(req.user._id, coachProfile);
+    const teams = await getCoachTeams(req.user.id, coachProfile);
     return res.status(200).json(teams);
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -96,7 +96,7 @@ export const getCoachTeamsForTools = async (req, res) => {
 
 export const getCoachEvents = async (req, res) => {
   try {
-    const events = await CoachEvent.find({ coach: req.user._id })
+    const events = await CoachEvent.find({ coach: req.user.id })
       .populate("club", "name profilePic")
       .populate("team", "name club")
       .sort({ date: 1, createdAt: -1 });
@@ -109,7 +109,7 @@ export const getCoachEvents = async (req, res) => {
 
 export const createCoachEvent = async (req, res) => {
   try {
-    const coachProfile = await getCoachProfile(req.user._id);
+    const coachProfile = await getCoachProfile(req.user.id);
     if (!coachProfile) {
       return res.status(404).json({ message: "Coach profile not found" });
     }
@@ -129,7 +129,7 @@ export const createCoachEvent = async (req, res) => {
         return res.status(404).json({ message: "Team not found" });
       }
 
-      const coachTeams = await getCoachTeams(req.user._id, coachProfile);
+      const coachTeams = await getCoachTeams(req.user.id, coachProfile);
       const allowedTeamIds = new Set(coachTeams.map((entry) => entry._id.toString()));
       if (!allowedTeamIds.has(team._id.toString())) {
         return res.status(403).json({ message: "You can only create events for your own teams" });
@@ -153,7 +153,7 @@ export const createCoachEvent = async (req, res) => {
     }
 
     const event = await CoachEvent.create({
-      coach: req.user._id,
+      coach: req.user.id,
       club,
       team: team?._id || null,
       ...eventPayload,
@@ -171,7 +171,7 @@ export const createCoachEvent = async (req, res) => {
 
 export const updateCoachEvent = async (req, res) => {
   try {
-    const event = await CoachEvent.findOne({ _id: req.params.id, coach: req.user._id });
+    const event = await CoachEvent.findOne({ _id: req.params.id, coach: req.user.id });
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
@@ -196,7 +196,7 @@ export const updateCoachEvent = async (req, res) => {
 
 export const deleteCoachEvent = async (req, res) => {
   try {
-    const event = await CoachEvent.findOneAndDelete({ _id: req.params.id, coach: req.user._id });
+    const event = await CoachEvent.findOneAndDelete({ _id: req.params.id, coach: req.user.id });
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
@@ -209,7 +209,7 @@ export const deleteCoachEvent = async (req, res) => {
 
 export const getCoachPerformanceRatings = async (req, res) => {
   try {
-    const ratings = await PerformanceRating.find({ coach: req.user._id })
+    const ratings = await PerformanceRating.find({ coach: req.user.id })
       .populate("athlete", "name profilePic email")
       .populate("team", "name")
       .sort({ updatedAt: -1, createdAt: -1 });
@@ -228,12 +228,12 @@ export const savePerformanceRating = async (req, res) => {
       return res.status(404).json({ message: "Athlete not found" });
     }
 
-    const coachProfile = await getCoachProfile(req.user._id);
+    const coachProfile = await getCoachProfile(req.user.id);
     if (!coachProfile) {
       return res.status(404).json({ message: "Coach profile not found" });
     }
 
-    const coachTeams = await getCoachTeams(req.user._id, coachProfile);
+    const coachTeams = await getCoachTeams(req.user.id, coachProfile);
     const eligibleTeam = coachTeams.find((team) =>
       (team.athletes || []).some((athlete) => athlete._id.toString() === athleteUserId)
     );
@@ -247,9 +247,9 @@ export const savePerformanceRating = async (req, res) => {
     const overallScore = buildOverallScore(scores);
 
     const rating = await PerformanceRating.findOneAndUpdate(
-      { coach: req.user._id, athlete: athleteUserId },
+      { coach: req.user.id, athlete: athleteUserId },
       {
-        coach: req.user._id,
+        coach: req.user.id,
         athlete: athleteUserId,
         team: eligibleTeam._id,
         scores,
@@ -274,13 +274,13 @@ export const savePerformanceRating = async (req, res) => {
 
 export const getAthleteCoachEvents = async (req, res) => {
   try {
-    const athleteProfile = await Athlete.findOne({ user: req.user._id });
+    const athleteProfile = await Athlete.findOne({ user: req.user.id });
     if (!athleteProfile) {
       return res.status(404).json({ message: "Athlete profile not found" });
     }
 
     const athleteClubIds = new Set((athleteProfile.clubs || []).map((clubId) => clubId.toString()));
-    const teams = await Team.find({ athletes: req.user._id }).select("_id");
+    const teams = await Team.find({ athletes: req.user.id }).select("_id");
     const athleteTeamIds = new Set(teams.map((team) => team._id.toString()));
 
     const events = await CoachEvent.find({
@@ -306,7 +306,7 @@ export const getAthleteCoachEvents = async (req, res) => {
 
 export const getAthletePerformanceRatings = async (req, res) => {
   try {
-    const ratings = await PerformanceRating.find({ athlete: req.user._id })
+    const ratings = await PerformanceRating.find({ athlete: req.user.id })
       .populate("coach", "name profilePic email")
       .populate("team", "name")
       .sort({ updatedAt: -1, createdAt: -1 });

@@ -3,13 +3,13 @@ import Club from "../models/Club.js";
 
 export const createCompetition = async (req, res) => {
     try {
-        // req.user._id = admin user
-        const club = await Club.findOne({ admin: req.user._id });
+        // req.user.id = admin user
+        const club = await Club.findOne({ admin: req.user.id });
         if (!club) return res.status(404).json({ message: "Club not found for this user" });
 
         const competition = await Competition.create({
             ...req.body,
-            createdBy: req.user._id
+            createdBy: req.user.id
         });
 
         res.status(201).json(competition);
@@ -20,7 +20,7 @@ export const createCompetition = async (req, res) => {
 
 export const getMyCompetitions = async (req, res) => {
     try {
-        const competitions = await Competition.find({ createdBy: req.user._id })
+        const competitions = await Competition.find({ createdBy: req.user.id })
             .populate("clubs.club")
             .populate("clubs.team")
             .populate("matches.team1")
@@ -47,7 +47,7 @@ export const getCompetitionById = async (req, res) => {
         if (!competition)
             return res.status(404).json({ message: "Competition not found" });
 
-        if (competition.createdBy.toString() !== req.user._id.toString() && !competition.public) {
+        if (competition.createdBy.toString() !== req.user.id.toString() && !competition.public) {
             return res.status(403).json({ message: "Not authorized to view this competition" });
         }
 
@@ -63,7 +63,7 @@ export const updateCompetition = async (req, res) => {
         if (!competition) return res.status(404).json({ message: "Competition not found" });
 
         const club = await Club.findOne({ admin: competition.createdBy });
-        if (!club || club.admin.toString() !== req.user._id.toString()) {
+        if (!club || club.admin.toString() !== req.user.id.toString()) {
             return res.status(403).json({ message: "Not authorized to update this competition" });
         }
 
@@ -81,7 +81,7 @@ export const deleteCompetition = async (req, res) => {
         if (!competition) return res.status(404).json({ message: "Competition not found" });
 
         const club = await Club.findOne({admin:competition.createdBy});
-        if (!club || club.admin.toString() !== req.user._id.toString()) {
+        if (!club || club.admin.toString() !== req.user.id.toString()) {
             return res.status(403).json({ message: "Not authorized to delete this competition" });
         }
 

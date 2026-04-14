@@ -454,8 +454,8 @@ export default function CoachTeams() {
           <div className="card" style={{ flex: 1, display: "flex", flexDirection: "column", padding: 0, overflow: "hidden", ...panelCardStyle }}>
             {!activeView ? (
               <div className="empty-state" style={{ height: "100%", justifyContent: "center", border: "none" }}>
-                <button onClick={() => setSidebarOpen(!sidebarOpen)} className="btn-ghost" style={{ position: "absolute", top: 15, left: 15 }}>
-                  <Users size={20} />
+                <button onClick={() => setSidebarOpen(!sidebarOpen)} className="btn-ghost" style={{ position: "absolute", top: 15, left: 15 }} title={sidebarOpen ? "Collapse sidebar" : "Open sidebar"}>
+                  <ChevronLeft size={20} style={{ transform: sidebarOpen ? "rotate(0deg)" : "rotate(180deg)" }} />
                 </button>
                 <MessageSquare size={50} opacity={0.3} />
                 <p style={{ marginTop: "1rem", color: "var(--theme-muted)", maxWidth: 300, textAlign: "center", lineHeight: 1.5 }}>Select a Team to open the group chat, or select an Athlete to send direct feedback.</p>
@@ -517,27 +517,53 @@ export default function CoachTeams() {
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                         <div>
                           <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--theme-muted)", marginBottom: "0.75rem" }}>Coaches</div>
-                          {currentTeam?.coaches?.length ? currentTeam.coaches.map((coach) => (
-                            <div key={coach._id} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.65rem 0", borderBottom: "1px solid var(--theme-border)" }}>
-                              {renderAvatar(coach.name || coach.user?.name, coach.profilePic || coach.user?.profilePic, 32, "coach")}
-                              <div>
-                                <div style={{ fontWeight: 700 }}>{coach.name || coach.user?.name || "Coach"}</div>
-                                <div style={{ fontSize: "0.78rem", color: "var(--theme-muted)" }}>{coach.user?.email || "Coach account"}</div>
+                          {currentTeam?.coaches?.length ? currentTeam.coaches.map((coach) => {
+                            const cId = coach.user?._id || coach._id || coach;
+                            const cName = coach.name || coach.user?.name || "Coach";
+                            const cPic = coach.profilePic || coach.user?.profilePic;
+                            const isMe = cId === user?._id || cId === coachUserId;
+                            return (
+                              <div key={cId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.65rem 0", borderBottom: "1px solid var(--theme-border)" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                                  {renderAvatar(cName, cPic, 32, "coach")}
+                                  <div>
+                                    <div style={{ fontWeight: 700 }}>{cName} {isMe && <span style={{color:"var(--theme-muted)", fontWeight:"normal"}}>(You)</span>}</div>
+                                    <div style={{ fontSize: "0.78rem", color: "var(--theme-muted)" }}>{coach.user?.email || "Coach account"}</div>
+                                  </div>
+                                </div>
+                                {!isMe && (
+                                  <button className="btn-ghost" style={{ fontSize: "0.7rem", padding: "0.35rem 0.6rem", border: "1px solid var(--theme-border)", borderRadius: 6, color: "var(--theme-primary)" }} onClick={() => { setActiveView({ type: "dm", id: cId, name: cName, avatar: cPic }); setShowTeamMemberList(false); if(window.innerWidth < 768) setSidebarOpen(false); }}>
+                                    Message
+                                  </button>
+                                )}
                               </div>
-                            </div>
-                          )) : <div style={{ color: "var(--theme-muted)", fontSize: "0.9rem" }}>No coaches assigned.</div>}
+                            );
+                          }) : <div style={{ color: "var(--theme-muted)", fontSize: "0.9rem" }}>No coaches assigned.</div>}
                         </div>
                         <div>
                           <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--theme-muted)", marginBottom: "0.75rem" }}>Athletes</div>
-                          {currentTeam?.athletes?.length ? currentTeam.athletes.map((athlete) => (
-                            <div key={athlete._id} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.65rem 0", borderBottom: "1px solid var(--theme-border)" }}>
-                              {renderAvatar(athlete.name || athlete.user?.name, athlete.profilePic || athlete.user?.profilePic, 32, "athlete")}
-                              <div>
-                                <div style={{ fontWeight: 700 }}>{athlete.name || athlete.user?.name || "Athlete"}</div>
-                                <div style={{ fontSize: "0.78rem", color: "var(--theme-muted)" }}>{athlete.user?.email || "Athlete account"}</div>
+                          {currentTeam?.athletes?.length ? currentTeam.athletes.map((athlete) => {
+                            const aId = athlete.user?._id || athlete._id || athlete;
+                            const aName = athlete.name || athlete.user?.name || "Athlete";
+                            const aPic = athlete.profilePic || athlete.user?.profilePic;
+                            const isMe = aId === user?._id || aId === coachUserId;
+                            return (
+                              <div key={aId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.65rem 0", borderBottom: "1px solid var(--theme-border)" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                                  {renderAvatar(aName, aPic, 32, "athlete")}
+                                  <div>
+                                    <div style={{ fontWeight: 700 }}>{aName} {isMe && <span style={{color:"var(--theme-muted)", fontWeight:"normal"}}>(You)</span>}</div>
+                                    <div style={{ fontSize: "0.78rem", color: "var(--theme-muted)" }}>{athlete.user?.email || "Athlete account"}</div>
+                                  </div>
+                                </div>
+                                {!isMe && (
+                                  <button className="btn-ghost" style={{ fontSize: "0.7rem", padding: "0.35rem 0.6rem", border: "1px solid var(--theme-border)", borderRadius: 6, color: "var(--theme-primary)" }} onClick={() => { setActiveView({ type: "dm", id: aId, name: aName, avatar: aPic }); setShowTeamMemberList(false); if(window.innerWidth < 768) setSidebarOpen(false); }}>
+                                    Message
+                                  </button>
+                                )}
                               </div>
-                            </div>
-                          )) : <div style={{ color: "var(--theme-muted)", fontSize: "0.9rem" }}>No athletes in this team.</div>}
+                            );
+                          }) : <div style={{ color: "var(--theme-muted)", fontSize: "0.9rem" }}>No athletes in this team.</div>}
                         </div>
                       </div>
                     </div>

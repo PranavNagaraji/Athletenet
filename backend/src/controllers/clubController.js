@@ -6,7 +6,7 @@ import Athlete from "../models/Athlete.js";
 
 export const getClubProfile = async (req, res) => {
     try {
-        const club = await Club.findOne({ admin: req.user._id });
+        const club = await Club.findOne({ admin: req.user.id });
         if (!club) return res.status(404).json({ message: "Club profile not found" });
         res.status(200).json(club);
     } catch (error) {
@@ -17,7 +17,7 @@ export const getClubProfile = async (req, res) => {
 export const toggleFollowClub = async (req, res) => {
     try {
         const clubId = req.params.id;
-        const userId = req.user._id;
+        const userId = req.user.id;
 
         const club = await Club.findById(clubId);
         if (!club) return res.status(404).json({ message: "Club not found" });
@@ -40,7 +40,7 @@ export const toggleFollowClub = async (req, res) => {
 export const updateClubProfile = async (req, res) => {
     try {
         const club = await Club.findOneAndUpdate(
-            { admin: req.user._id },
+            { admin: req.user.id },
             req.body,
             {
                 new: true,

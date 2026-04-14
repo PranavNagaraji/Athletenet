@@ -5,16 +5,18 @@ import { useAuth } from "../context/AuthContext";
 const API = import.meta.env.VITE_BACKEND_URL;
 const STORAGE_KEY = "an_seen_notifications";
 
-function getSeenIds() {
+function getSeenIds(userId) {
+  if (!userId) return new Set();
   try {
-    return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"));
+    return new Set(JSON.parse(localStorage.getItem(`${STORAGE_KEY}_${userId}`) || "[]"));
   } catch {
     return new Set();
   }
 }
 
-function saveSeenIds(ids) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]));
+function saveSeenIds(userId, ids) {
+  if (!userId) return;
+  localStorage.setItem(`${STORAGE_KEY}_${userId}`, JSON.stringify([...ids]));
 }
 
 function timeAgo(dateStr) {
@@ -211,8 +213,14 @@ export default function NotificationBell({ role }) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const [seenIds, setSeenIds] = useState(getSeenIds);
+  const [seenIds, setSeenIds] = useState(new Set());
   const panelRef = useRef();
+
+  useEffect(() => {
+    if (user?._id) {
+      setSeenIds(getSeenIds(user._id));
+    }
+  }, [user?._id]);
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
@@ -294,16 +302,16 @@ export default function NotificationBell({ role }) {
   const unreadCount = notifications.filter((n) => !seenIds.has(n.id)).length;
 
   const markAllRead = () => {
-    const allIds = new Set(notifications.map((n) => n.id));
+    const allIds = new Set([...seenIds, ...notifications.map((n) => n.id)]);
     setSeenIds(allIds);
-    saveSeenIds(allIds);
+    saveSeenIds(user?._id, allIds);
   };
 
   const markOneRead = (id) => {
     const updated = new Set(seenIds);
     updated.add(id);
     setSeenIds(updated);
-    saveSeenIds(updated);
+    saveSeenIds(user?._id, updated);
   };
 
   const handleOpen = () => {

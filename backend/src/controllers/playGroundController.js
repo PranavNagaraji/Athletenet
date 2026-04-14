@@ -3,7 +3,7 @@ import Playground from "../models/Playground.js";
 
 export const createPlayground = async (req, res) => {
     try {
-        const club = await Club.findOne({ admin: req.user._id });
+        const club = await Club.findOne({ admin: req.user.id });
         if (!club) return res.status(404).json({ message: "Club not found" });
         const playground = await Playground.create({
             ...req.body,

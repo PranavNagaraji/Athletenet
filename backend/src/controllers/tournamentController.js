@@ -5,7 +5,7 @@ import Team from "../models/Team.js";
 export const createTournament = async (req, res) => {
     try {
         const { name, description, sport, startDate, endDate, banner, public: isPublic } = req.body;
-        const club = await Club.findOne({ admin: req.user._id });
+        const club = await Club.findOne({ admin: req.user.id });
         if (!club) return res.status(404).json({ message: "Club profile not found" });
 
         const tournament = await Tournament.create({
@@ -19,7 +19,7 @@ export const createTournament = async (req, res) => {
 
 export const getMyTournaments = async (req, res) => {
     try {
-        const club = await Club.findOne({ admin: req.user._id });
+        const club = await Club.findOne({ admin: req.user.id });
         if (!club) return res.status(404).json({ message: "Club not found" });
         const tournaments = await Tournament.find({ club: club._id })
             .populate({ path: "club", populate: { path: "admin", select: "name profilePic" } })
@@ -38,7 +38,7 @@ export const updateTournament = async (req, res) => {
         const tournament = await Tournament.findById(req.params.id);
         if (!tournament) return res.status(404).json({ message: "Tournament not found" });
 
-        const club = await Club.findOne({ admin: req.user._id });
+        const club = await Club.findOne({ admin: req.user.id });
         if (!club || tournament.club.toString() !== club._id.toString()) {
             return res.status(403).json({ message: "Not authorized to update this tournament" });
         }
@@ -56,7 +56,7 @@ export const deleteTournament = async (req, res) => {
         const tournament = await Tournament.findById(req.params.id);
         if (!tournament) return res.status(404).json({ message: "Tournament not found" });
 
-        const club = await Club.findOne({ admin: req.user._id });
+        const club = await Club.findOne({ admin: req.user.id });
         if (!club || tournament.club.toString() !== club._id.toString()) {
             return res.status(403).json({ message: "Not authorized to delete this tournament" });
         }
@@ -85,7 +85,7 @@ export const joinTournament = async (req, res) => {
         const { tournamentId, teamId } = req.body;
         
         // 1. Verify User is a Club Admin
-        const club = await Club.findOne({ admin: req.user._id });
+        const club = await Club.findOne({ admin: req.user.id });
         if (!club) return res.status(403).json({ message: "Only club owners can register teams for tournaments" });
 
         // 2. Verify Tournament exists
@@ -111,7 +111,7 @@ export const joinTournament = async (req, res) => {
 
 export const getParticipatingTournaments = async (req, res) => {
     try {
-        const club = await Club.findOne({ admin: req.user._id });
+        const club = await Club.findOne({ admin: req.user.id });
         if (!club) return res.status(404).json({ message: "Club not found" });
 
         const myTeams = await Team.find({ club: club._id });

@@ -49,7 +49,7 @@ const resolveCoachIdParam = async (coachIdParam, reqUser) => {
 
 export const createFormation = async (req, res) => {
   try {
-    const coachProfile = await getCoachProfileForUser(req.user._id);
+    const coachProfile = await getCoachProfileForUser(req.user.id);
     if (!coachProfile) return res.status(404).json({ message: "Coach profile not found" });
 
     const formation = await Formation.create({
@@ -105,7 +105,7 @@ export const getFormationById = async (req, res) => {
 
 export const updateFormation = async (req, res) => {
   try {
-    const coachProfile = await getCoachProfileForUser(req.user._id);
+    const coachProfile = await getCoachProfileForUser(req.user.id);
     if (!coachProfile) return res.status(404).json({ message: "Coach profile not found" });
 
     const existing = await Formation.findById(req.params.id);
@@ -127,7 +127,7 @@ export const updateFormation = async (req, res) => {
 
 export const deleteFormation = async (req, res) => {
   try {
-    const coachProfile = await getCoachProfileForUser(req.user._id);
+    const coachProfile = await getCoachProfileForUser(req.user.id);
     if (!coachProfile) return res.status(404).json({ message: "Coach profile not found" });
 
     const formation = await Formation.findById(req.params.id);
@@ -153,7 +153,7 @@ export const addComment = async (req, res) => {
     const formation = await Formation.findById(req.params.id);
     if (!formation) return res.status(404).json({ message: "Formation not found" });
 
-    formation.comments.push({ user: req.user._id, text: String(text).trim().slice(0, 1000) });
+    formation.comments.push({ user: req.user.id, text: String(text).trim().slice(0, 1000) });
     await formation.save();
 
     const updated = await Formation.findById(req.params.id)
@@ -185,7 +185,7 @@ export const deleteComment = async (req, res) => {
 
     const comment = formation.comments.id(req.params.cId);
     if (!comment) return res.status(404).json({ message: "Comment not found" });
-    if (String(comment.user) !== String(req.user._id))
+    if (String(comment.user) !== String(req.user.id))
       return res.status(403).json({ message: "You can only delete your own comments" });
 
     comment.deleteOne();
