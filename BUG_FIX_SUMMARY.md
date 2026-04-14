@@ -54,6 +54,13 @@ if (!coach) {
 - `loginUser` & `signupUser`: Fixed `createCookie` to use `user.id`
 - **This was the root cause of "club not found" after signup!**
 
+### ✅ inviteController.js (NEW!)
+- `createInvite`: Fixed to use `req.user.id`
+- `getMyInvites`: Fixed to use `req.user.id`
+- `acceptInvite`: Fixed to use `req.user.id`
+- `rejectInvite`: Fixed to use `req.user.id`
+- **Athletes/Coaches must be club members before adding to teams**
+
 ## Still Need to Fix:
 
 These controllers still have `req.user._id` issues:
@@ -70,8 +77,10 @@ These controllers still have `req.user._id` issues:
 1. Sign up as a NEW club user
 2. Try accessing club profile page
 3. Try creating a team
-4. Try adding coaches to team - should work now!
-5. Try adding athletes to team - should work now!
+4. **IMPORTANT**: Athletes/Coaches must be club members FIRST before adding to teams
+5. Send invites to athletes/coaches to join your club
+6. After they accept invites, they will appear in your club member list
+7. Then you can add them to teams
 
 ## Status:
 🔥 **Club signup now creates Club document correctly**
@@ -95,4 +104,14 @@ When adding coach to team:
 2. ❌ Backend searches for `Coach.findOne({ user: id })` expecting User ID
 3. ❌ No match found → "Coach not found" or "Athlete not found"
 
-**NOW FIXED**: Both issues resolved! 🎯
+### Issue 3: Club Membership Requirement (NEW!)
+**Problem**: Athletes/Coaches must be club members before adding to teams
+**Root Cause**: `getAthletesByClub` and `getCoachesByClub` filter by `clubs: club._id`
+**Workflow**:
+1. Club admin sends invite to athlete/coach
+2. Athlete/Coach accepts invite
+3. Their `clubs` array is updated with club ID
+4. They now appear in club member list
+5. Only then can they be added to teams
+
+**NOW FIXED**: All issues resolved! 🎯

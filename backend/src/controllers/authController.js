@@ -21,7 +21,7 @@ export const loginUser = async (req, res) => {
         const isMatch = await user.comparePassword(password);
         if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-        createCookie(res, user._id, user.role);
+        createCookie(res, user.id, user.role);
 
         res.json({ message: "Login successful" });
     }
@@ -45,16 +45,16 @@ export const signupUser = async (req, res) => {
         });
 
         if (role === "athlete") {
-            await Athlete.create({ user: user._id });
+            await Athlete.create({ user: user.id });
         }
         if (role === "coach") {
-            await Coach.create({ user: user._id });
+            await Coach.create({ user: user.id });
         }
         if (role === "club") {
-            await Club.create({ admin: user._id });
+            await Club.create({ admin: user.id });
         }
 
-        createCookie(res, user._id, user.role);
+        createCookie(res, user.id, user.role);
 
         res.status(201).json({ message: "Signup successful" });
     } catch (error) {
